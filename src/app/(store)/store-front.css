@@ -1,0 +1,50 @@
+/* هوية المتجر — يعتمد على --store-primary و --store-secondary من الإعدادات */
+
+.store-front a.store-link:hover {
+  opacity: 0.85;
+}
+
+.store-front .store-text-primary {
+  color: var(--store-primary);
+}
+
+.store-front .store-bg-primary {
+  background-color: var(--store-primary);
+}
+
+.store-front .store-border-primary {
+  border-color: color-mix(in srgb, var(--store-primary) 25%, transparent);
+}
+
+.store-front .store-ring-primary:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--store-primary) 40%, transparent);
+}
+
+.store-front .store-btn-primary {
+  background-color: var(--store-primary);
+  color: white;
+}
+
+.store-front .store-btn-primary:hover {
+  filter: brightness(1.05);
+}
+
+.store-front .store-btn-outline {
+  border: 2px solid var(--store-primary);
+  color: var(--store-primary);
+}
+
+.store-front .store-card:hover {
+  border-color: color-mix(in srgb, var(--store-primary) 35%, #e5e7eb);
+  box-shadow: 0 10px 25px color-mix(in srgb, var(--store-primary) 12%, transparent);
+}
+
+.store-front .group:hover .group-hover-store-primary {
+  color: var(--store-primary);
+}
+
+.store-front .group:hover .group-hover-store-bg {
+  background-color: var(--store-primary);
+  color: white;
+}

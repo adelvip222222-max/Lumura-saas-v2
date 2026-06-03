@@ -51,7 +51,8 @@ export async function createCategoryAction(
   rawData: unknown
 ): Promise<ApiResponse<{ id: string }>> {
   const session = await auth();
-  if (!session?.user || !["admin", "super_admin", "tenant"].includes(session.user.role)) {
+  if (!session?.user || !["tenant_admin", "super_admin", "staff_products"].includes(session.user.role)) {
+    console.log("session?.user" , session?.user)
     return { success: false, error: "Insufficient permissions" };
   }
 
@@ -103,7 +104,8 @@ export async function updateCategoryAction(
   rawData: unknown
 ): Promise<ApiResponse> {
   const session = await auth();
-  if (!session?.user || !["admin", "super_admin", "tenant"].includes(session.user.role)) {
+  if (!session?.user || !["tenant_admin", "super_admin", "staff_products"].includes(session.user.role)) {
+    console.log("session?.user" , session?.user)
     return { success: false, error: "Insufficient permissions" };
   }
 

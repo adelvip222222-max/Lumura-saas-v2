@@ -145,7 +145,7 @@ export async function getAdminPaymentProofsAction(rawFilters: {
   limit?:  number;
 }): Promise<ApiResponse<PaginatedResponse<IPaymentProof>>> {
   const session = await auth();
-  if (!session?.user || !["admin", "super_admin"].includes(session.user.role)) {
+  if (!session?.user || !["tenant_admin", "super_admin", "staff_products"].includes(session.user.role)) {
     return { success: false, error: "Insufficient permissions" };
   }
 
@@ -192,7 +192,7 @@ export async function approvePaymentProofAction(
   proofId: string
 ): Promise<ApiResponse> {
   const session = await auth();
-  if (!session?.user || !["admin", "super_admin"].includes(session.user.role)) {
+  if (!session?.user || !["tenant_admin", "super_admin", "staff_products"].includes(session.user.role)) {
     return { success: false, error: "Insufficient permissions" };
   }
 
@@ -276,7 +276,7 @@ export async function rejectPaymentProofAction(
   rejectReason: string
 ): Promise<ApiResponse> {
   const session = await auth();
-  if (!session?.user || !["admin", "super_admin"].includes(session.user.role)) {
+  if (!session?.user || !["tenant_admin", "super_admin", "staff_products"].includes(session.user.role)) {
     return { success: false, error: "Insufficient permissions" };
   }
 

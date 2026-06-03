@@ -28,7 +28,7 @@ export async function getCustomersAction(
   rawFilters: unknown
 ): Promise<ApiResponse<PaginatedResponse<CustomerRow>>> {
   const session = await auth();
-  if (!session?.user || !["admin", "super_admin"].includes(session.user.role)) {
+  if (!session?.user || !["tenant_admin", "super_admin", "staff_products"].includes(session.user.role)) {
     return { success: false, error: "Insufficient permissions" };
   }
 
@@ -88,7 +88,7 @@ export async function toggleCustomerStatusAction(
   userId: string
 ): Promise<ApiResponse> {
   const session = await auth();
-  if (!session?.user || !["admin", "super_admin"].includes(session.user.role)) {
+  if (!session?.user || !["tenant_admin", "super_admin", "staff_products"].includes(session.user.role)) {
     return { success: false, error: "Insufficient permissions" };
   }
 

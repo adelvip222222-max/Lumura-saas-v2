@@ -62,7 +62,7 @@ interface StoreItem {
 
 function storePath(stores: StoreItem[], suffix = ""): string {
   const slug = stores[0]?.slug;
-  if (!slug) return "/dashboard/store/create";
+  if (!slug) return "/dashboard/create";
   return `/dashboard/stores/${slug}${suffix}`;
 }
 
@@ -177,7 +177,7 @@ export default async function DashboardRootPage() {
   const tenantStatus = tenant?.status ? statusLabels[tenant.status] : null;
 
   const stats = [
-    { title: "إجمالي المتاجر", value: stores.length.toLocaleString("ar-EG"), sub: tenant ? `من ${tenant.maxStores ?? 1} مسموح` : undefined, icon: Store, accent: "border-l-blue-500", color: "text-blue-600", bg: "bg-blue-100 dark:bg-blue-900/20", href: stores.length ? storePath(stores) : "/dashboard/store/create" },
+    { title: "إجمالي المتاجر", value: stores.length.toLocaleString("ar-EG"), sub: tenant ? `من ${tenant.maxStores ?? 1} مسموح` : undefined, icon: Store, accent: "border-l-blue-500", color: "text-blue-600", bg: "bg-blue-100 dark:bg-blue-900/20", href: stores.length ? storePath(stores) : "/dashboard/create" },
     { title: "المنتجات", value: totals.products.toLocaleString("ar-EG"), icon: Package, accent: "border-l-green-500", color: "text-green-600", bg: "bg-green-100 dark:bg-green-900/20", href: storePath(stores, "/products") },
     { title: "الطلبات", value: totals.orders.toLocaleString("ar-EG"), icon: ShoppingBag, accent: "border-l-orange-500", color: "text-orange-600", bg: "bg-orange-100 dark:bg-orange-900/20", href: storePath(stores, "/orders") },
     { title: "الإيرادات", value: formatCurrency(totals.revenue), icon: DollarSign, accent: "border-l-purple-500", color: "text-purple-600", bg: "bg-purple-100 dark:bg-purple-900/20", href: storePath(stores, "/reports") },
@@ -190,7 +190,7 @@ export default async function DashboardRootPage() {
         { href: storePath(stores, "/orders"), label: "الطلبات", icon: ShoppingBag },
         { href: storePath(stores, "/settings"), label: "الإعدادات", icon: Settings },
       ]
-    : [{ href: "/dashboard/store/create", label: "إنشاء متجر", icon: Plus }];
+    : [{ href: "/dashboard/create", label: "إنشاء متجر", icon: Plus }];
 
   const today = formatDate(new Date());
 
@@ -369,7 +369,7 @@ export default async function DashboardRootPage() {
                   أنشئ متجرك الأول وابدأ بإضافة المنتجات واستقبال الطلبات
                 </p>
                 <Button className="mt-6" >
-                  <Link href="/dashboard/store/create">
+                  <Link href="/dashboard/create">
                     <Plus className="h-4 w-4 ml-1.5" />
                     إنشاء متجر جديد
                   </Link>

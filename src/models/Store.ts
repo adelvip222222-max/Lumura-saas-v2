@@ -8,14 +8,24 @@ export interface IStore extends Document {
   
   // معلومات أساسية (لغة واحدة)
   name: string;                    // اسم المتجر
+  nameEn?: string;
   description: string;             // وصف المتجر
+  descriptionEn?: string;
   shortBio?: string;               // نبذة مختصرة
+  shortBioEn?: string;
   
   // الوسائط
   logo?: string;
   logoPublicId?: string;
   coverImage?: string;
   coverPublicId?: string;
+  coverImages?: Array<{
+    url: string;
+    publicId?: string;
+    alt?: string;
+  }>;
+  favicon?: string;
+  faviconPublicId?: string;
   
   // معلومات التواصل
   email: string;
@@ -80,6 +90,11 @@ const StoreSchema = new Schema<IStore>(
       minlength: [2, "اسم المتجر يجب أن يكون على الأقل 2 أحرف"],
       maxlength: [100, "اسم المتجر لا يمكن أن يتجاوز 100 حرف"],
     },
+    nameEn: {
+      type: String,
+      trim: true,
+      maxlength: [100, "Store name cannot exceed 100 characters"],
+    },
     description: {
       type: String,
       required: [true, "وصف المتجر مطلوب"],
@@ -87,15 +102,34 @@ const StoreSchema = new Schema<IStore>(
       minlength: [10, "وصف المتجر يجب أن يكون على الأقل 10 أحرف"],
       maxlength: [500, "وصف المتجر لا يمكن أن يتجاوز 500 حرف"],
     },
+    descriptionEn: {
+      type: String,
+      trim: true,
+      maxlength: [2000, "Store description cannot exceed 2000 characters"],
+    },
     shortBio: {
       type: String,
       trim: true,
       maxlength: [160, "النص التعريفي لا يمكن أن يتجاوز 160 حرف"],
     },
+    shortBioEn: {
+      type: String,
+      trim: true,
+      maxlength: [200, "Short bio cannot exceed 200 characters"],
+    },
     logo: { type: String },
     logoPublicId: { type: String },
     coverImage: { type: String },
     coverPublicId: { type: String },
+    coverImages: [
+      {
+        url: { type: String, required: true },
+        publicId: { type: String },
+        alt: { type: String },
+      },
+    ],
+    favicon: { type: String },
+    faviconPublicId: { type: String },
     email: {
       type: String,
       required: [true, "البريد الإلكتروني مطلوب"],

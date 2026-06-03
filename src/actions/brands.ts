@@ -31,7 +31,7 @@ export async function createBrandAction(
   rawData: unknown
 ): Promise<ApiResponse<{ id: string }>> {
   const session = await auth();
-  if (!session?.user || !["admin", "super_admin"].includes(session.user.role)) {
+  if (!session?.user || !["tenant_admin", "super_admin", "staff_products"].includes(session.user.role)) {
     return { success: false, error: "Insufficient permissions" };
   }
 
@@ -81,7 +81,7 @@ export async function createBrandAction(
 
 export async function updateBrandAction(rawData: unknown): Promise<ApiResponse> {
   const session = await auth();
-  if (!session?.user || !["admin", "super_admin"].includes(session.user.role)) {
+  if (!session?.user || !["tenant_admin", "super_admin", "staff_products"].includes(session.user.role)) {
     return { success: false, error: "Insufficient permissions" };
   }
 
@@ -127,7 +127,7 @@ export async function updateBrandAction(rawData: unknown): Promise<ApiResponse> 
 
 export async function deleteBrandAction(id: string): Promise<ApiResponse> {
   const session = await auth();
-  if (!session?.user || !["admin", "super_admin"].includes(session.user.role)) {
+  if (!session?.user || !["tenant_admin", "super_admin", "staff_products"].includes(session.user.role)) {
     return { success: false, error: "Insufficient permissions" };
   }
 

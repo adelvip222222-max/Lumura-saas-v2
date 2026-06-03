@@ -10,6 +10,7 @@ export interface StorePublicTheme {
   logo?: string;
   favicon?: string;
   coverImage?: string;
+  coverImages?: Array<{ url: string; publicId?: string; alt?: string }>;
   email?: string;
   phone?: string;
   address?: string;
@@ -28,6 +29,7 @@ type StoreDoc = {
   logo?: string;
   favicon?: string;
   coverImage?: string;
+  coverImages?: Array<{ url: string; publicId?: string; alt?: string }>;
   email?: string;
   phone?: string;
   address?: string;
@@ -56,6 +58,11 @@ export function buildStorePublicTheme(store: StoreDoc): StorePublicTheme {
     logo: store.logo,
     favicon: store.favicon,
     coverImage: store.coverImage,
+    coverImages: Array.isArray(store.coverImages)
+      ? store.coverImages.filter((image) => image?.url).slice(0, 3)
+      : store.coverImage
+        ? [{ url: store.coverImage }]
+        : [],
     email: store.email,
     phone: store.phone,
     address: store.address,
@@ -119,8 +126,8 @@ export function buildStorePageMetadata(
       title: siteTitle,
       description: description.slice(0, 200),
       siteName: siteTitle,
-      images: theme.coverImage
-        ? [{ url: theme.coverImage, width: 1200, height: 630, alt: siteTitle }]
+      images: (theme.coverImages?.[0]?.url || theme.coverImage)
+        ? [{ url: theme.coverImages?.[0]?.url || theme.coverImage || "", width: 1200, height: 630, alt: siteTitle }]
         : theme.logo
           ? [{ url: theme.logo, alt: siteTitle }]
           : undefined,

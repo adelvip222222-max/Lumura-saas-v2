@@ -32,6 +32,16 @@ const createStoreSchema = z.object({
   logoPublicId: z.string().optional(),
   coverImage: z.string().optional(),
   coverPublicId: z.string().optional(),
+  coverImages: z
+    .array(
+      z.object({
+        url: z.string(),
+        publicId: z.string().optional(),
+        alt: z.string().optional(),
+      })
+    )
+    .max(3)
+    .default([]),
   primaryColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "لون غير صالح (مثال: #f97316)").default("#f97316"),
 });
 
@@ -66,16 +76,17 @@ export default function CreateStorePage() {
       logoPublicId: "",
       coverImage: "",
       coverPublicId: "",
+      coverImages: [],
       primaryColor: "#f97316",
     },
   });
 
   const watchedLogo = watch("logo");
-  const watchedCover = watch("coverImage");
+  const watchedCovers = watch("coverImages") ?? [];
   const watchedName = watch("name");
 
   // دالة رفع الصورة إلى Cloudinary
-  const uploadImage = async (file: File, type: "logo" | "cover"): Promise<string> => {
+  const uploadImage = async (file: File, type: "logo" | "cover"): Promise<{ url: string; publicId?: string }> => {
     const formData = new FormData();
     formData.append("file", file);
     formData.append("type", type);
@@ -92,7 +103,7 @@ export default function CreateStorePage() {
     }
 
     const data = await response.json();
-    return data.url;
+    return { url: data.url, publicId: data.publicId };
   };
 
   // معالجة رفع الشعار
@@ -114,8 +125,9 @@ export default function CreateStorePage() {
 
     setUploadingLogo(true);
     try {
-      const url = await uploadImage(file, "logo");
-      setValue("logo", url);
+      const result = await uploadImage(file, "logo");
+      setValue("logo", result.url);
+      setValue("logoPublicId", result.publicId || "");
       toast.success("تم رفع الشعار بنجاح");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "فشل رفع الشعار");
@@ -127,24 +139,47 @@ export default function CreateStorePage() {
 
   // معالجة رفع صورة الغلاف
   const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = Array.from(e.target.files ?? []);
+    if (!files.length) return;
 
-    if (!file.type.startsWith("image/")) {
-      toast.error("يرجى اختيار ملف صورة صحيح");
+    const availableSlots = 3 - watchedCovers.length;
+    if (availableSlots <= 0) {
+      toast.error("يمكنك رفع 3 صور غلاف كحد أقصى");
       return;
     }
 
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("حجم الصورة يجب أن يكون أقل من 5 ميجابايت");
+    const selectedFiles = files.slice(0, availableSlots);
+    if (files.length > availableSlots) {
+      toast.warning(`سيتم رفع ${availableSlots} صور فقط لأن الحد الأقصى 3 صور`);
+    }
+
+    if (selectedFiles.some((file) => !file.type.startsWith("image/"))) {
+      toast.error("يرجى اختيار ملفات صور صحيحة");
+      return;
+    }
+
+    if (selectedFiles.some((file) => file.size > 5 * 1024 * 1024)) {
+      toast.error("حجم كل صورة يجب أن يكون أقل من 5 ميجابايت");
       return;
     }
 
     setUploadingCover(true);
     try {
-      const url = await uploadImage(file, "cover");
-      setValue("coverImage", url);
-      toast.success("تم رفع صورة الغلاف بنجاح");
+      const uploaded = [];
+      for (const file of selectedFiles) {
+        const result = await uploadImage(file, "cover");
+        uploaded.push({
+          url: result.url,
+          publicId: result.publicId || "",
+          alt: "",
+        });
+      }
+
+      const nextCovers = [...watchedCovers, ...uploaded].slice(0, 3);
+      setValue("coverImages", nextCovers);
+      setValue("coverImage", nextCovers[0]?.url || "");
+      setValue("coverPublicId", nextCovers[0]?.publicId || "");
+      toast.success(`تم رفع ${uploaded.length} صورة غلاف بنجاح`);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "فشل رفع صورة الغلاف");
     } finally {
@@ -160,9 +195,11 @@ export default function CreateStorePage() {
   };
 
   // إزالة صورة الغلاف
-  const removeCover = () => {
-    setValue("coverImage", "");
-    setValue("coverPublicId", "");
+  const removeCover = (index: number) => {
+    const nextCovers = watchedCovers.filter((_, coverIndex) => coverIndex !== index);
+    setValue("coverImages", nextCovers);
+    setValue("coverImage", nextCovers[0]?.url || "");
+    setValue("coverPublicId", nextCovers[0]?.publicId || "");
   };
 
   const onSubmit = async (data: CreateStoreForm) => {
@@ -178,6 +215,8 @@ export default function CreateStorePage() {
         address: data.address || "",
         logo: data.logo || "",
         coverImage: data.coverImage || "",
+        coverPublicId: data.coverPublicId || "",
+        coverImages: data.coverImages || [],
         primaryColor: data.primaryColor,
       });
 
@@ -439,22 +478,43 @@ export default function CreateStorePage() {
 
                   {/* رفع صورة الغلاف */}
                   <div>
-                    <Label className="text-gray-700">صورة الغلاف</Label>
+                    <Label className="text-gray-700">صور الغلاف</Label>
                     <div className="mt-2">
-                      {watchedCover ? (
-                        <div className="relative">
-                          <img
-                            src={watchedCover}
-                            alt="Cover preview"
-                            className="w-full h-32 object-cover border rounded-lg"
-                          />
-                          <button
-                            type="button"
-                            onClick={removeCover}
-                            className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition"
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
+                      {watchedCovers.length > 0 ? (
+                        <div className="space-y-3">
+                          <div className="grid gap-3 sm:grid-cols-3">
+                            {watchedCovers.map((cover, index) => (
+                              <div key={`${cover.url}-${index}`} className="relative overflow-hidden rounded-lg border bg-gray-50">
+                                <img
+                                  src={cover.url}
+                                  alt={`Cover preview ${index + 1}`}
+                                  className="h-28 w-full object-cover"
+                                />
+                                <span className="absolute bottom-2 right-2 rounded-full bg-black/60 px-2 py-0.5 text-xs font-semibold text-white">
+                                  {index + 1}
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => removeCover(index)}
+                                  className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition"
+                                >
+                                  <X className="w-4 h-4" />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                          {watchedCovers.length < 3 && (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => coverInputRef.current?.click()}
+                              disabled={uploadingCover}
+                            >
+                              {uploadingCover ? <Loader2 className="w-4 h-4 animate-spin ml-2" /> : <Upload className="w-4 h-4 ml-2" />}
+                              إضافة صورة غلاف
+                            </Button>
+                          )}
                         </div>
                       ) : (
                         <div
@@ -466,7 +526,7 @@ export default function CreateStorePage() {
                           ) : (
                             <>
                               <Upload className="w-6 h-6 text-gray-400 group-hover:text-orange-500" />
-                              <span className="text-sm text-gray-400 mt-1">اضغط لرفع صورة الغلاف</span>
+                              <span className="text-sm text-gray-400 mt-1">اضغط لرفع حتى 3 صور غلاف</span>
                             </>
                           )}
                         </div>
@@ -475,11 +535,12 @@ export default function CreateStorePage() {
                         ref={coverInputRef}
                         type="file"
                         accept="image/*"
+                        multiple
                         onChange={handleCoverUpload}
                         className="hidden"
                       />
                     </div>
-                    <p className="text-gray-400 text-xs mt-2">يوصى بحجم 1200x400 بكسل</p>
+                    <p className="text-gray-400 text-xs mt-2">يوصى بحجم 1600x600 بكسل. أول صورة تظهر كغلاف افتراضي والسلايدر يعرض الثلاثة.</p>
                   </div>
 
                   {/* اللون الأساسي */}

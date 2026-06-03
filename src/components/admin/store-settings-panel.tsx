@@ -25,6 +25,7 @@ export interface StoreSettingsData {
   logoPublicId?: string;
   coverImage?: string;
   coverPublicId?: string;
+  coverImages?: Array<{ url: string; publicId?: string; alt?: string }>;
   favicon?: string;
   faviconPublicId?: string;
   email: string;
@@ -190,6 +191,12 @@ export function StoreSettingsPanel({ store, storeSlug, section }: Props) {
     logoPublicId: store.logoPublicId ?? "",
     coverImage: store.coverImage ?? "",
     coverPublicId: store.coverPublicId ?? "",
+    coverImages:
+      store.coverImages?.length
+        ? store.coverImages.slice(0, 3)
+        : store.coverImage
+          ? [{ url: store.coverImage, publicId: store.coverPublicId ?? "", alt: "" }]
+          : [],
     favicon: store.favicon ?? "",
     faviconPublicId: store.faviconPublicId ?? "",
     dateFormat: store.settings.dateFormat ?? "DD/MM/YYYY",
@@ -240,11 +247,13 @@ export function StoreSettingsPanel({ store, storeSlug, section }: Props) {
       }
 
       if (section === "media") {
+        const coverImages = form.coverImages.filter((image) => image.url).slice(0, 3);
         Object.assign(payload, {
           logo: form.logo,
           logoPublicId: form.logoPublicId || undefined,
-          coverImage: form.coverImage,
-          coverPublicId: form.coverPublicId || undefined,
+          coverImage: coverImages[0]?.url ?? form.coverImage,
+          coverPublicId: coverImages[0]?.publicId || form.coverPublicId || undefined,
+          coverImages,
           favicon: form.favicon,
           faviconPublicId: form.faviconPublicId || undefined,
         });
@@ -498,22 +507,59 @@ export function StoreSettingsPanel({ store, storeSlug, section }: Props) {
                 }
               />
             </div>
-            <ImageUploadField
-              label={isAr ? "صورة الغلاف الرئيسية" : "Cover Image"}
-              hint={isAr ? "بانر الصفحة الرئيسية — 1600×600" : "Homepage banner — 1600×600"}
-              value={form.coverImage}
-              publicId={form.coverPublicId}
-              type="cover"
-              storeSlug={storeSlug}
-              aspect="cover"
-              onChange={(url, pid) =>
-                setForm({
-                  ...form,
-                  coverImage: url,
-                  coverPublicId: pid ?? (url ? form.coverPublicId : ""),
-                })
-              }
-            />
+            <div className="space-y-3">
+              <div>
+                <p className="text-sm font-medium">{isAr ? "صور الغلاف الرئيسية" : "Cover Slider Images"}</p>
+                <p className="text-xs text-muted-foreground">
+                  {isAr ? "حتى 3 صور للسلايدر — 1600×600" : "Up to 3 slider images — 1600×600"}
+                </p>
+              </div>
+              {form.coverImages.length > 0 && (
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                  {form.coverImages.map((image, index) => (
+                    <div key={`${image.url}-${index}`} className="relative overflow-hidden rounded-xl border bg-muted">
+                      <img src={image.url} alt="" className="h-28 w-full object-cover" />
+                      <span className="absolute bottom-2 right-2 rounded-full bg-black/60 px-2 py-0.5 text-xs font-semibold text-white">
+                        {index + 1}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const next = form.coverImages.filter((_, itemIndex) => itemIndex !== index);
+                          setForm({
+                            ...form,
+                            coverImages: next,
+                            coverImage: next[0]?.url ?? "",
+                            coverPublicId: next[0]?.publicId ?? "",
+                          });
+                        }}
+                        className="absolute top-2 left-2 rounded-full bg-destructive p-1 text-white shadow"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {form.coverImages.length < 3 && (
+                <ImageUploadField
+                  label={isAr ? "إضافة صورة غلاف" : "Add Cover Image"}
+                  value=""
+                  type="cover"
+                  storeSlug={storeSlug}
+                  aspect="cover"
+                  onChange={(url, pid) => {
+                    const next = [...form.coverImages, { url, publicId: pid ?? "", alt: "" }].slice(0, 3);
+                    setForm({
+                      ...form,
+                      coverImages: next,
+                      coverImage: next[0]?.url ?? "",
+                      coverPublicId: next[0]?.publicId ?? "",
+                    });
+                  }}
+                />
+              )}
+            </div>
           </CardContent>
         </Card>
         <SaveButton saving={saving} onSave={handleSave} isAr={isAr} />

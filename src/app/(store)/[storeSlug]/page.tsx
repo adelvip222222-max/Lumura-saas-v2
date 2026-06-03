@@ -12,6 +12,7 @@ import {
   Truck,
 } from "lucide-react";
 import { ProductCard } from "@/components/store/product-card";
+import { StoreHomeHeroSlider } from "@/components/store-front/store-home-hero-slider";
 import { getStoreBySlug } from "@/lib/store/store-actions";
 import { getStoreCategories } from "@/lib/store/store-categories";
 import { getStoreProducts } from "@/lib/store/store-products";
@@ -67,7 +68,7 @@ export default async function StoreHomePage({ params }: Props) {
       ? "اكتشف تشكيلة مختارة بعناية من المنتجات الجديدة والعروض المميزة."
       : "Discover a curated selection of new arrivals and featured offers.");
 
-  const heroImage =
+  const fallbackHeroImage =
     theme.coverImage ||
     heroProducts.find((product: any) => product.images?.[0]?.url)?.images?.[0]?.url;
 
@@ -116,26 +117,13 @@ export default async function StoreHomePage({ params }: Props) {
             </form>
           </div>
 
-          <div className="relative">
-            <div className="absolute -inset-5 bg-slate-100" />
-            <div className="relative aspect-[4/5] overflow-hidden bg-slate-100">
-              {heroImage ? (
-                <img src={heroImage} alt={storeName} className="h-full w-full object-cover" />
-              ) : (
-                <div className="grid h-full place-items-center">
-                  <Package className="h-24 w-24 text-slate-300" />
-                </div>
-              )}
-              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/55 to-transparent p-6 text-white">
-                <p className="text-xs font-bold uppercase tracking-[0.24em] text-white/75">
-                  {storeName}
-                </p>
-                <p className="mt-2 text-2xl font-black">
-                  {isAr ? "منتجات مختارة بعناية" : "Curated products"}
-                </p>
-              </div>
-            </div>
-          </div>
+          <StoreHomeHeroSlider
+            slides={theme.coverImages ?? []}
+            fallbackImage={fallbackHeroImage}
+            storeName={storeName}
+            caption={isAr ? "منتجات مختارة بعناية" : "Curated products"}
+            isAr={isAr}
+          />
         </div>
       </section>
 

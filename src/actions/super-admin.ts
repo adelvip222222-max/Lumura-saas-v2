@@ -38,7 +38,7 @@ export interface SaaSStats {
 
 export async function getSaaSStatsAction(): Promise<ApiResponse<SaaSStats>> {
   const session = await auth();
-  if (!session?.user || !["admin", "super_admin"].includes(session.user.role)) {
+  if (!session?.user || !["tenant_admin", "super_admin", "staff_products"].includes(session.user.role)) {
     return { success: false, error: "Insufficient permissions" };
   }
 
@@ -192,7 +192,7 @@ export async function adminUpgradeSubscriptionAction(
   planId:         string
 ): Promise<ApiResponse> {
   const session = await auth();
-  if (!session?.user || !["admin", "super_admin"].includes(session.user.role)) {
+  if (!session?.user || !["tenant_admin", "super_admin", "staff_products"].includes(session.user.role)) {
     return { success: false, error: "Insufficient permissions" };
   }
 
@@ -218,7 +218,7 @@ export async function getRevenueTimelineAction(
   months = 12
 ): Promise<ApiResponse<Array<{ month: string; mrr: number; newSubs: number }>>> {
   const session = await auth();
-  if (!session?.user || !["admin", "super_admin"].includes(session.user.role)) {
+  if (!session?.user || !["tenant_admin", "super_admin", "staff_products"].includes(session.user.role)) {
     return { success: false, error: "Insufficient permissions" };
   }
 

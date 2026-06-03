@@ -40,6 +40,16 @@ const updateStoreSchema = z.object({
   logoPublicId: z.string().optional(),
   coverImage: z.string().optional(),
   coverPublicId: z.string().optional(),
+  coverImages: z
+    .array(
+      z.object({
+        url: z.string().url(),
+        publicId: z.string().optional(),
+        alt: z.string().optional(),
+      })
+    )
+    .max(3)
+    .optional(),
   favicon: z.string().optional(),
   faviconPublicId: z.string().optional(),
   email: z.string().email().optional(),
@@ -84,6 +94,8 @@ export async function createStoreAction(rawData: {
   address?: string;
   logo?: string;
   coverImage?: string;
+  coverPublicId?: string;
+  coverImages?: Array<{ url: string; publicId?: string; alt?: string }>;
   primaryColor?: string;
 }): Promise<ApiResponse<{ storeId: string; slug: string }>> {
   const session = await auth();
@@ -113,6 +125,11 @@ export async function createStoreAction(rawData: {
     }
 
     // إنشاء المتجر
+    const coverImages = (rawData.coverImages ?? [])
+      .filter((image) => image.url)
+      .slice(0, 3);
+    const primaryCover = coverImages[0];
+
     const store = await Store.create({
       tenantId: session.user.tenantId,
       slug: rawData.slug,
@@ -126,7 +143,9 @@ export async function createStoreAction(rawData: {
       phone: rawData.phone || "",
       address: rawData.address || "",
       logo: rawData.logo || "",
-      coverImage: rawData.coverImage || "",
+      coverImage: primaryCover?.url || rawData.coverImage || "",
+      coverPublicId: primaryCover?.publicId || rawData.coverPublicId || "",
+      coverImages,
       settings: {
         currency: "EGP",
         language: "ar",
@@ -314,6 +333,7 @@ export async function updateStoreAction(rawData: unknown): Promise<ApiResponse> 
       "logoPublicId",
       "coverImage",
       "coverPublicId",
+      "coverImages",
       "favicon",
       "faviconPublicId",
     ] as const;
@@ -343,6 +363,12 @@ export async function updateStoreAction(rawData: unknown): Promise<ApiResponse> 
       if (rest.coverImage === "") {
         updatePayload.coverImage = "";
         updatePayload.coverPublicId = "";
+      }
+      if (Array.isArray(rest.coverImages)) {
+        const coverImages = rest.coverImages.filter((image) => image.url).slice(0, 3);
+        updatePayload.coverImages = coverImages;
+        updatePayload.coverImage = coverImages[0]?.url ?? "";
+        updatePayload.coverPublicId = coverImages[0]?.publicId ?? "";
       }
       if (rest.favicon === "") {
         updatePayload.favicon = "";

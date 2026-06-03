@@ -40,6 +40,16 @@ export default async function AdminSettingsPage({ params }: Props) {
     logoPublicId: raw.logoPublicId ? String(raw.logoPublicId) : "",
     coverImage: raw.coverImage ? String(raw.coverImage) : "",
     coverPublicId: raw.coverPublicId ? String(raw.coverPublicId) : "",
+    coverImages: Array.isArray(raw.coverImages)
+      ? raw.coverImages
+          .map((image) => ({
+            url: String((image as { url?: unknown }).url ?? ""),
+            publicId: (image as { publicId?: unknown }).publicId ? String((image as { publicId?: unknown }).publicId) : "",
+            alt: (image as { alt?: unknown }).alt ? String((image as { alt?: unknown }).alt) : "",
+          }))
+          .filter((image) => image.url)
+          .slice(0, 3)
+      : [],
     favicon: raw.favicon ? String(raw.favicon) : "",
     faviconPublicId: raw.faviconPublicId ? String(raw.faviconPublicId) : "",
     email: String(raw.email ?? ""),

@@ -5,7 +5,7 @@ import { getCloudinaryUploadTransform } from "@/lib/store/store-media";
 
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 const MAX_BYTES = 5 * 1024 * 1024;
-const UPLOAD_TYPES = ["product", "store", "cover", "logo"];
+const UPLOAD_TYPES = ["product", "store", "cover", "logo", "favicon", "category", "brand"];
 
 function normalizeUploadType(type: string) {
   return UPLOAD_TYPES.includes(type) ? type : "product";

@@ -11,6 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import { useTranslation } from "@/hooks/use-translation";
 import { updateStoreAction } from "@/actions/stores";
 import { cn } from "@/lib/utils";
+import { ThemePresetSelector } from "@/components/admin/theme-preset-selector";
+import { getDefaultTheme } from "@/config/store-themes";
 
 export interface StoreSettingsData {
   _id: string;
@@ -37,6 +39,7 @@ export interface StoreSettingsData {
     language: string;
     timezone: string;
     dateFormat: string;
+    themePreset?: string;
     theme: { primaryColor: string; secondaryColor: string };
   };
   seo?: {
@@ -207,6 +210,7 @@ export function StoreSettingsPanel({ store, storeSlug, section }: Props) {
     currency: store.settings.currency,
     language: store.settings.language as "ar" | "en",
     timezone: store.settings.timezone,
+    themePreset: store.settings.themePreset ?? getDefaultTheme().id,
     primaryColor: store.settings.theme.primaryColor,
     secondaryColor: store.settings.theme.secondaryColor,
     seoTitle: store.seo?.title ?? "",
@@ -262,6 +266,7 @@ export function StoreSettingsPanel({ store, storeSlug, section }: Props) {
       if (section === "appearance") {
         Object.assign(payload, {
           settings: {
+            themePreset: form.themePreset,
             theme: {
               primaryColor: form.primaryColor,
               secondaryColor: form.secondaryColor,
@@ -572,9 +577,32 @@ export function StoreSettingsPanel({ store, storeSlug, section }: Props) {
       <div className="space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">{isAr ? "ألوان المتجر" : "Store Colors"}</CardTitle>
+            <CardTitle className="text-base">{isAr ? "اختر تصميماً جاهزاً" : "Store Design Templates"}</CardTitle>
             <CardDescription>
-              {isAr ? "الألوان الأساسية لواجهة متجرك الإلكتروني" : "Primary colors for your storefront"}
+              {isAr ? "اختر من بين عدة تصاميم جاهزة جميلة لمتجرك" : "Choose a beautiful pre-designed theme for your store"}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ThemePresetSelector
+              value={form.themePreset}
+              onChange={(themeId, primaryColor, secondaryColor) => {
+                setForm({
+                  ...form,
+                  themePreset: themeId,
+                  primaryColor,
+                  secondaryColor,
+                });
+              }}
+              isAr={isAr}
+            />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">{isAr ? "ألوان المتجر المخصصة" : "Custom Store Colors"}</CardTitle>
+            <CardDescription>
+              {isAr ? "يمكنك تخصيص الألوان بعد اختيار التصميم الجاهز" : "Customize colors after selecting a template"}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">

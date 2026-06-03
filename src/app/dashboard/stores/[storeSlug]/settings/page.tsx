@@ -61,6 +61,7 @@ export default async function AdminSettingsPage({ params }: Props) {
       language: String((raw.settings as StoreSettingsData["settings"])?.language ?? "ar"),
       timezone: String((raw.settings as StoreSettingsData["settings"])?.timezone ?? "Africa/Cairo"),
       dateFormat: String((raw.settings as StoreSettingsData["settings"])?.dateFormat ?? "DD/MM/YYYY"),
+      themePreset: String((raw.settings as StoreSettingsData["settings"])?.themePreset ?? "modern"),
       theme: {
         primaryColor: String((raw.settings as StoreSettingsData["settings"])?.theme?.primaryColor ?? "#f97316"),
         secondaryColor: String((raw.settings as StoreSettingsData["settings"])?.theme?.secondaryColor ?? "#10b981"),

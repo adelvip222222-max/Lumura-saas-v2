@@ -38,6 +38,7 @@ export interface IStore extends Document {
     language: string;
     timezone: string;
     dateFormat: string;
+    themePreset?: string;
     theme: {
       primaryColor: string;
       secondaryColor: string;
@@ -148,6 +149,7 @@ const StoreSchema = new Schema<IStore>(
       language: { type: String, default: 'ar', enum: ['ar', 'en'] },
       timezone: { type: String, default: 'Africa/Cairo' },
       dateFormat: { type: String, default: 'DD/MM/YYYY' },
+      themePreset: { type: String, default: 'modern' },
       theme: {
         primaryColor: { type: String, default: '#f97316', match: /^#[0-9A-Fa-f]{6}$/ },
         secondaryColor: { type: String, default: '#10b981', match: /^#[0-9A-Fa-f]{6}$/ },

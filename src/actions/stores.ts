@@ -62,6 +62,7 @@ const updateStoreSchema = z.object({
       language: z.enum(["ar", "en"]).optional(),
       timezone: z.string().optional(),
       dateFormat: z.string().optional(),
+      themePreset: z.string().optional(),
       theme: z
         .object({
           primaryColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/).optional(),
@@ -151,6 +152,7 @@ export async function createStoreAction(rawData: {
         language: "ar",
         timezone: "Africa/Cairo",
         dateFormat: "DD/MM/YYYY",
+        themePreset: "modern",
         theme: {
           primaryColor: rawData.primaryColor || "#f97316",
           secondaryColor: "#10b981",

@@ -280,3 +280,34 @@ export async function getBrandsAction(): Promise<ApiResponse<any[]>> {
     return { success: false, error: "Failed to fetch brands" };
   }
 }
+
+// ─── Get Recent Activity ──────────────────────────────────────────────────────
+import AuditLog from "@/models/AuditLog";
+
+export async function getRecentActivityAction(limit: number = 10) {
+  const session = await auth();
+
+  if (!session?.user?.tenantId) {
+    return [];
+  }
+
+  try {
+    await connectToDatabase();
+
+    const activities = await AuditLog.find({
+      tenantId: session.user.tenantId,
+    })
+      .sort({ timestamp: -1 })
+      .limit(limit)
+      .lean();
+
+    return serialize(activities.map((activity) => ({
+      ...activity,
+      _id: activity._id.toString(),
+    })));
+  } catch (error) {
+    console.error("Failed to get recent activity:", error);
+    return [];
+  }
+}
+

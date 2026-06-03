@@ -15,6 +15,13 @@ import {
   type TenantRole,
   type Permission,
 } from "@/lib/auth/permissions";
+import { AuditAction, auditLog } from "@/lib/audit/audit-logger";
+import {
+  trackLoginFailure,
+  getLoginFailureCount,
+  resetLoginFailures,
+} from "@/lib/middleware/rate-limit";
+import { AuthErrorCode, getAuthErrorMessage, GENERIC_AUTH_ERROR } from "@/lib/auth/auth-errors";
 
 type SessionStore = {
   id: string;
@@ -111,24 +118,72 @@ export const authConfig = {
         const password = String(credentials?.password ?? "");
 
         if (!email || !password) {
-          throw new Error("Email and password are required");
+          throw new Error(AuthErrorCode.INVALID_CREDENTIALS);
         }
 
         await connectToDatabase();
 
+        // Check if account is locked due to too many failed attempts
+        const failureCount = await getLoginFailureCount(email);
+        if (failureCount >= 3) {
+          // Account is locked
+          await auditLog({
+            userEmail: email,
+            action: AuditAction.LOGIN_FAILED,
+            resource: "tenant",
+            status: "failure",
+            error: "Account locked - too many failed attempts",
+          });
+
+          throw new Error(AuthErrorCode.ACCOUNT_LOCKED);
+        }
+
         const user = await Tenant.findOne({ email }).select("+password");
         if (!user) {
-          throw new Error("Invalid email or password");
+          // Track failed attempt
+          await trackLoginFailure(email);
+          await auditLog({
+            userEmail: email,
+            action: AuditAction.LOGIN_FAILED,
+            resource: "tenant",
+            status: "failure",
+            error: "Invalid credentials",
+          });
+
+          throw new Error(AuthErrorCode.INVALID_CREDENTIALS);
         }
 
         const isValid = await bcrypt.compare(password, user.password);
         if (!isValid) {
-          throw new Error("Invalid email or password");
+          // Track failed attempt
+          await trackLoginFailure(email);
+          await auditLog({
+            userEmail: email,
+            action: AuditAction.LOGIN_FAILED,
+            resource: "tenant",
+            status: "failure",
+            error: "Invalid password",
+            userId: user._id.toString(),
+          });
+
+          throw new Error(AuthErrorCode.INVALID_CREDENTIALS);
         }
 
         if (!user.isActive) {
-          throw new Error("Account is inactive");
+          await auditLog({
+            userEmail: email,
+            action: AuditAction.LOGIN_FAILED,
+            resource: "tenant",
+            status: "failure",
+            error: "Account inactive",
+            userId: user._id.toString(),
+          });
+
+          throw new Error(AuthErrorCode.ACCOUNT_INACTIVE);
         }
+
+        // Reset failed attempts on successful login
+        await resetLoginFailures(email);
 
         let store: any = null;
         let stores: SessionStore[] = [];
@@ -188,6 +243,20 @@ export const authConfig = {
         const permissions = isStaffRole(role)
           ? currentStoreAccess?.permissions ?? []
           : rolePermissions[role] || [];
+
+        // Log successful login
+        await auditLog({
+          userId: user._id.toString(),
+          userEmail: user.email,
+          userRole: role,
+          tenantId:
+            role === "tenant_admin"
+              ? user._id.toString()
+              : user.tenantId?.toString(),
+          action: AuditAction.LOGIN,
+          resource: "tenant",
+          status: "success",
+        });
 
         return {
           id: user._id.toString(),

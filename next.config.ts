@@ -16,6 +16,7 @@ const contentSecurityPolicy = [
 ].join("; ");
 
 const nextConfig: NextConfig = {
+  crossOrigin: "use-credentials",
   eslint: {
     ignoreDuringBuilds: true,
   },

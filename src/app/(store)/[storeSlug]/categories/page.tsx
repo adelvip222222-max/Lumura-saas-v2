@@ -35,7 +35,7 @@ export default async function StoreCategoriesPage({ params }: Props) {
   const rest     = categories.filter((c) => !c.isFeatured);
 
   return (
-    <div className="container py-10 space-y-12">
+    <div className="container mx-auto px-4 py-10 space-y-12">
       {/* Header */}
       <div>
         <nav className="flex items-center gap-1.5 text-sm text-muted-foreground mb-4">

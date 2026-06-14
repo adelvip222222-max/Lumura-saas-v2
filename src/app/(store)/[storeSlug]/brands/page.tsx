@@ -34,7 +34,7 @@ export default async function StoreBrandsPage({ params }: Props) {
   const rest     = brands.filter((b) => !b.isFeatured);
 
   return (
-    <div className="container py-10 space-y-12">
+    <div className="container mx-auto px-4 py-10 space-y-12">
       <div>
         <nav className="flex items-center gap-1.5 text-sm text-muted-foreground mb-4">
           <Link href={base} className="hover:text-foreground">Home</Link>

@@ -81,7 +81,6 @@ export function ProductEditForm({ product, storeSlug }: ProductEditFormProps) {
     defaultValues: {
       id: product._id.toString(),
       name: product.name,
-      nameAr: product.nameAr ?? "",
       description: product.description,
       shortDescription: product.shortDescription ?? "",
       sku: product.sku,
@@ -207,21 +206,12 @@ export function ProductEditForm({ product, storeSlug }: ProductEditFormProps) {
           <CardHeader>
             <CardTitle className="text-base">Basic Information</CardTitle>
           </CardHeader>
-          <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <CardContent className="space-y-4">
             <FormField label="Product Name" required error={errors.name?.message} htmlFor="name">
               <Input
                 id="name"
                 {...register("name")}
                 error={errors.name?.message}
-              />
-            </FormField>
-
-            <FormField label="Arabic Name" error={errors.nameAr?.message} htmlFor="nameAr">
-              <Input
-                id="nameAr"
-                dir="rtl"
-                {...register("nameAr")}
-                error={errors.nameAr?.message}
               />
             </FormField>
 

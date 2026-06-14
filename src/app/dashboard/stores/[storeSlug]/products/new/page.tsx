@@ -298,14 +298,9 @@ export default function NewProductPage() {
                 <CardTitle className="text-base">{t("basicInfo")}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <FormField label={t("productName")} required error={errors.name?.message}>
-                    <Input {...register("name")} placeholder={isAr ? "مثال: آيفون 15 برو" : "e.g. iPhone 15 Pro"} />
-                  </FormField>
-                  <FormField label={t("productNameAr")} error={errors.nameAr?.message}>
-                    <Input {...register("nameAr")} placeholder="مثال: آيفون 15 برو" dir="rtl" />
-                  </FormField>
-                </div>
+                <FormField label={t("productName")} required error={errors.name?.message}>
+                  <Input {...register("name")} placeholder={isAr ? "مثال: آيفون 15 برو" : "e.g. iPhone 15 Pro"} />
+                </FormField>
 
                 <FormField label={t("productDescription")} required error={errors.description?.message}>
                   <textarea
@@ -319,35 +314,14 @@ export default function NewProductPage() {
                   )}
                 </FormField>
 
-                <FormField label={t("productDescriptionAr")} error={errors.descriptionAr?.message}>
+                <FormField label={t("shortDescription")} error={errors.shortDescription?.message}>
                   <textarea
-                    {...register("descriptionAr")}
-                    rows={3}
-                    dir="rtl"
-                    placeholder="وصف كامل للمنتج بالعربية..."
+                    {...register("shortDescription")}
+                    rows={2}
+                    placeholder={isAr ? "ملخص قصير..." : "Brief summary..."}
                     className={textareaClass}
                   />
                 </FormField>
-
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <FormField label={t("shortDescription")} error={errors.shortDescription?.message}>
-                    <textarea
-                      {...register("shortDescription")}
-                      rows={2}
-                      placeholder={isAr ? "ملخص قصير..." : "Brief summary..."}
-                      className={textareaClass}
-                    />
-                  </FormField>
-                  <FormField label={t("shortDescriptionAr")} error={undefined}>
-                    <textarea
-                      {...register("shortDescriptionAr" as keyof CreateProductInput)}
-                      rows={2}
-                      dir="rtl"
-                      placeholder="ملخص قصير بالعربية..."
-                      className={textareaClass}
-                    />
-                  </FormField>
-                </div>
               </CardContent>
             </Card>
 

@@ -1,6 +1,6 @@
 // src/app/dashboard/page.tsx
 import type { Metadata } from "next";
-import { auth } from "@/lib/auth";
+import { auth, signOut } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import {
@@ -221,25 +221,44 @@ export default async function DashboardRootPage() {
           </nav>
         </div>
 
-        {/* Sidebar Bottom - Limits / Usage */}
-        {tenant && (
-          <div className="border-t border-slate-900 pt-5 space-y-3">
-            <div className="flex justify-between items-center text-xs font-bold text-slate-400">
-              <span>المتاجر النشطة</span>
-              <span>{stores.length} / {tenant.maxStores ?? 5}</span>
+        {/* Sidebar Bottom - Limits / Usage & Logout */}
+        <div className="space-y-5">
+          {tenant && (
+            <div className="border-t border-slate-900 pt-5 space-y-3">
+              <div className="flex justify-between items-center text-xs font-bold text-slate-400">
+                <span>المتاجر النشطة</span>
+                <span>{stores.length} / {tenant.maxStores ?? 5}</span>
+              </div>
+              <div className="h-2 w-full bg-slate-900 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-teal-500 rounded-full transition-all duration-300"
+                  style={{ width: `${Math.min((stores.length / (tenant.maxStores ?? 5)) * 100, 100)}%` }}
+                />
+              </div>
+              <div className="flex items-center justify-between text-[10px] text-slate-500">
+                <span>الباقة: {planLabels[tenant.plan] || tenant.plan}</span>
+                {tenantStatus && <span className="text-teal-500">{tenantStatus.label}</span>}
+              </div>
             </div>
-            <div className="h-2 w-full bg-slate-900 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-teal-500 rounded-full transition-all duration-300"
-                style={{ width: `${Math.min((stores.length / (tenant.maxStores ?? 5)) * 100, 100)}%` }}
-              />
-            </div>
-            <div className="flex items-center justify-between text-[10px] text-slate-500">
-              <span>الباقة: {planLabels[tenant.plan] || tenant.plan}</span>
-              {tenantStatus && <span className="text-teal-500">{tenantStatus.label}</span>}
-            </div>
+          )}
+
+          <div className="border-t border-slate-900 pt-4">
+            <form
+              action={async () => {
+                "use server";
+                await signOut({ redirectTo: "/login" });
+              }}
+            >
+              <button
+                type="submit"
+                className="flex w-full items-center gap-3 px-4 py-3 rounded-2xl text-rose-400 hover:bg-rose-950/30 hover:text-rose-300 transition font-semibold"
+              >
+                <LogOut className="h-5 w-5 text-rose-400" />
+                <span>تسجيل الخروج</span>
+              </button>
+            </form>
           </div>
-        )}
+        </div>
       </aside>
 
       {/* 2. Main Layout (Center + Right) */}
@@ -260,6 +279,21 @@ export default async function DashboardRootPage() {
             </div>
             {/* Profile Info & Logout */}
             <div className="flex items-center gap-3 self-end sm:self-auto">
+              <form
+                action={async () => {
+                  "use server";
+                  await signOut({ redirectTo: "/login" });
+                }}
+              >
+                <button
+                  type="submit"
+                  className="flex h-9 w-9 items-center justify-center rounded-2xl border border-rose-100 bg-rose-50 text-rose-600 hover:bg-rose-100 hover:text-rose-700 shadow-sm transition"
+                  title="تسجيل الخروج"
+                >
+                  <LogOut className="h-4 w-4" />
+                </button>
+              </form>
+
               <div className="flex items-center gap-2 rounded-2xl bg-white border border-slate-200 px-3 py-1.5 shadow-sm">
                 <Globe2 className="h-4 w-4 text-slate-500" />
                 <span className="text-xs font-bold text-slate-700">العربية</span>

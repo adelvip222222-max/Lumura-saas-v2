@@ -17,6 +17,7 @@ import {
   Clock,
   CheckCircle2,
   Inbox,
+  ExternalLink,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -64,34 +65,11 @@ function SectionLink({ href, label }: { href: string; label: string }) {
   return (
     <Link
       href={href}
-      className="text-xs font-medium text-primary hover:underline inline-flex items-center gap-1"
+      className="text-xs font-bold text-teal-600 hover:underline inline-flex items-center gap-1"
     >
       {label}
       <ArrowLeft className="h-3 w-3" />
     </Link>
-  );
-}
-
-function QuickActions({ storeSlug }: { storeSlug: string }) {
-  const base = `/dashboard/stores/${storeSlug}`;
-  const actions = [
-    { href: `${base}/products/new`, label: "إضافة منتج", icon: Plus, variant: "primary" as const },
-    { href: `${base}/orders`, label: "الطلبات", icon: ShoppingCart, variant: "outline" as const },
-    { href: `${base}/inventory`, label: "المخزون", icon: Warehouse, variant: "outline" as const },
-    { href: `${base}/reports`, label: "التقارير", icon: BarChart3, variant: "outline" as const },
-  ];
-
-  return (
-    <div className="flex flex-wrap gap-2">
-      {actions.map((action) => (
-        <Button key={action.href} variant={action.variant} size="sm" >
-          <Link href={action.href}>
-            <action.icon className="h-4 w-4 ml-1.5" />
-            {action.label}
-          </Link>
-        </Button>
-      ))}
-    </div>
   );
 }
 
@@ -102,25 +80,26 @@ async function PendingOrdersBanner({ storeSlug }: { storeSlug: string }) {
   if (pendingCount === 0) return null;
 
   return (
-    <div className="flex items-center justify-between gap-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 dark:border-amber-900/50 dark:bg-amber-950/30">
+    <div className="flex items-center justify-between gap-4 rounded-2xl border border-amber-200 bg-amber-50/70 p-4 text-amber-950 shadow-sm animate-pulse">
       <div className="flex items-center gap-3">
-        <div className="rounded-full bg-amber-100 p-2 dark:bg-amber-900/40">
-          <Clock className="h-4 w-4 text-amber-600" />
+        <div className="rounded-full bg-amber-100 p-2">
+          <Clock className="h-5 w-5 text-amber-600" />
         </div>
         <div>
-          <p className="text-sm font-medium text-amber-900 dark:text-amber-100">
+          <p className="text-sm font-black text-amber-950">
             {pendingCount} {pendingCount === 1 ? "طلب" : "طلبات"} بانتظار المراجعة
           </p>
-          <p className="text-xs text-amber-700/80 dark:text-amber-300/80">
-            راجع الطلبات الجديدة وحدّث حالتها
+          <p className="text-xs text-amber-700/80 mt-0.5">
+            راجع الطلبات الجديدة بمتجرك وحدّث حالتها
           </p>
         </div>
       </div>
-      <Button size="sm" variant="outline" className="shrink-0 border-amber-300" >
-        <Link href={`/dashboard/stores/${storeSlug}/orders?status=pending`}>
-          عرض الطلبات
-        </Link>
-      </Button>
+      <Link
+        href={`/dashboard/stores/${storeSlug}/orders?status=pending`}
+        className="inline-flex h-9 items-center justify-center rounded-xl bg-amber-600 px-4 text-xs font-bold text-white hover:bg-amber-700 transition"
+      >
+        عرض الطلبات
+      </Link>
     </div>
   );
 }
@@ -130,7 +109,7 @@ async function DashboardStats() {
 
   if (!result.success || !result.data) {
     return (
-      <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+      <div className="rounded-2xl border border-rose-200 bg-rose-50/50 p-4 text-xs font-bold text-rose-950">
         تعذّر تحميل الإحصائيات. حاول تحديث الصفحة.
       </div>
     );
@@ -144,76 +123,57 @@ async function DashboardStats() {
       value: formatCurrency(stats.totalRevenue),
       change: stats.revenueGrowth,
       icon: DollarSign,
-      accent: "border-l-green-500",
-      color: "text-green-600",
-      bg: "bg-green-100 dark:bg-green-900/20",
+      bg: "bg-emerald-500 shadow-emerald-100/50",
+      desc: "الإيرادات المحققة بمتجرك",
     },
     {
       title: "إجمالي الطلبات",
       value: stats.totalOrders.toLocaleString("ar-EG"),
       change: stats.ordersGrowth,
       icon: ShoppingCart,
-      accent: "border-l-blue-500",
-      color: "text-blue-600",
-      bg: "bg-blue-100 dark:bg-blue-900/20",
+      bg: "bg-amber-500 shadow-amber-100/50",
+      desc: "الطلبات المسجلة من عملائك",
     },
     {
       title: "إجمالي المنتجات",
       value: stats.totalProducts.toLocaleString("ar-EG"),
       change: 0,
       icon: Package,
-      accent: "border-l-purple-500",
-      color: "text-purple-600",
-      bg: "bg-purple-100 dark:bg-purple-900/20",
+      bg: "bg-indigo-500 shadow-indigo-100/50",
+      desc: "المنتجات المضافة بمتجرك",
     },
     {
       title: "إجمالي العملاء",
       value: stats.totalCustomers.toLocaleString("ar-EG"),
       change: stats.customersGrowth,
       icon: Users,
-      accent: "border-l-orange-500",
-      color: "text-orange-600",
-      bg: "bg-orange-100 dark:bg-orange-900/20",
+      bg: "bg-rose-500 shadow-rose-100/50",
+      desc: "العملاء المسجلين بمتجرك",
     },
   ];
 
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div className="grid gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
       {cards.map((card) => (
-        <Card
+        <div
           key={card.title}
-          className={`border-l-4 ${card.accent} transition-shadow hover:shadow-md`}
+          className={`rounded-3xl ${card.bg} text-white p-6 shadow-lg relative overflow-hidden group hover:scale-[1.02] transition duration-300`}
         >
-          <CardContent className="p-5">
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <p className="text-sm font-medium text-muted-foreground">
-                  {card.title}
-                </p>
-                <p className="mt-1 text-2xl font-bold tracking-tight">{card.value}</p>
-                {card.change !== 0 && (
-                  <div className="mt-2 flex items-center gap-1">
-                    {card.change > 0 ? (
-                      <TrendingUp className="h-3.5 w-3.5 text-green-600" />
-                    ) : (
-                      <TrendingDown className="h-3.5 w-3.5 text-destructive" />
-                    )}
-                    <span
-                      className={`text-xs font-medium ${
-                        card.change > 0 ? "text-green-600" : "text-destructive"
-                      }`}
-                    >
-                      {Math.abs(card.change).toFixed(1)}% مقارنة بالشهر الماضي
-                    </span>
-                  </div>
-                )}
-              </div>
-              <div className={`shrink-0 rounded-xl p-2.5 ${card.bg}`}>
-                <card.icon className={`h-5 w-5 ${card.color}`} />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+          <div className="absolute -right-6 -bottom-6 h-20 w-20 rounded-full bg-white/10" />
+          <div className="flex justify-between items-start">
+            <span className="grid h-10 w-10 place-items-center rounded-2xl bg-white/20 text-white">
+              <card.icon className="h-5 w-5" />
+            </span>
+            {card.change !== 0 && (
+              <Badge className="bg-white/20 border-0 hover:bg-white/30 text-white text-[10px] font-bold">
+                {card.change > 0 ? "+" : ""}{card.change.toFixed(1)}%
+              </Badge>
+            )}
+          </div>
+          <p className="mt-6 text-sm font-bold opacity-80">{card.title}</p>
+          <h3 className="text-3xl font-black mt-1">{card.value}</h3>
+          <p className="text-[10px] opacity-65 mt-2">{card.desc}</p>
+        </div>
       ))}
     </div>
   );
@@ -223,7 +183,7 @@ async function SalesChartSection() {
   const result = await getSalesDataAction("30d");
   const data = result.data ?? [];
 
-  return <SalesChart data={data} title="الإيرادات والطلبات (آخر 30 يوماً)" />;
+  return <SalesChart data={data} title="نشاط المبيعات والإيرادات (آخر 30 يوماً)" />;
 }
 
 async function RecentOrdersSection({ storeSlug }: { storeSlug: string }) {
@@ -231,54 +191,58 @@ async function RecentOrdersSection({ storeSlug }: { storeSlug: string }) {
   const orders = result.success ? result.data?.orders ?? [] : [];
 
   return (
-    <Card className="h-full">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-        <CardTitle className="text-base font-semibold">الطلبات الأخيرة</CardTitle>
-        <SectionLink href={`/dashboard/stores/${storeSlug}/orders`} label="عرض الكل" />
-      </CardHeader>
-      <CardContent>
-        {orders.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-8 text-center">
-            <Inbox className="h-10 w-10 text-muted-foreground/40 mb-3" />
-            <p className="text-sm font-medium text-muted-foreground">لا توجد طلبات بعد</p>
-            <p className="text-xs text-muted-foreground/80 mt-1">
-              ستظهر الطلبات الجديدة هنا تلقائياً
-            </p>
-          </div>
-        ) : (
-          <div className="divide-y">
-            {orders.map((order) => {
-              const status = statusLabels[order.status] ?? {
-                label: order.status,
-                variant: "outline" as const,
-              };
-              return (
-                <Link
-                  key={order._id}
-                  href={`/dashboard/stores/${storeSlug}/orders/${order._id}`}
-                  className="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0 hover:bg-muted/40 -mx-2 px-2 rounded-md transition-colors"
-                >
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium truncate">
-                      #{order.orderNumber}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      {formatDate(order.createdAt)}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <Badge variant={status.variant}>{status.label}</Badge>
-                    <span className="text-sm font-semibold tabular-nums">
-                      {formatCurrency(order.total)}
-                    </span>
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+    <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-base font-black text-slate-950">الطلبات الأخيرة</h3>
+          <p className="text-xs text-slate-400 mt-0.5">آخر 5 طلبات مسجلة بمتجرك</p>
+        </div>
+        <Link
+          href={`/dashboard/stores/${storeSlug}/orders`}
+          className="text-xs font-bold text-teal-600 hover:underline inline-flex items-center gap-1"
+        >
+          <span>عرض الكل</span>
+          <ArrowLeft className="h-3 w-3" />
+        </Link>
+      </div>
+
+      {orders.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-8 text-center">
+          <Inbox className="h-10 w-10 text-slate-300 mb-3" />
+          <p className="text-sm font-bold text-slate-700">لا توجد طلبات بعد</p>
+          <p className="text-xs text-slate-400 mt-1">ستظهر الطلبات الجديدة هنا تلقائياً</p>
+        </div>
+      ) : (
+        <div className="divide-y divide-slate-100">
+          {orders.map((order) => {
+            const status = statusLabels[order.status] ?? {
+              label: order.status,
+              variant: "outline" as const,
+            };
+            return (
+              <Link
+                key={order._id}
+                href={`/dashboard/stores/${storeSlug}/orders/${order._id}`}
+                className="flex items-center justify-between gap-3 py-3.5 first:pt-0 last:pb-0 hover:bg-slate-50/50 -mx-3 px-3 rounded-2xl transition-colors"
+              >
+                <div className="min-w-0">
+                  <p className="text-sm font-black text-slate-900">#{order.orderNumber}</p>
+                  <p className="text-xs text-slate-400 mt-0.5">{formatDate(order.createdAt)}</p>
+                </div>
+                <div className="flex items-center gap-3 shrink-0">
+                  <Badge variant={status.variant} className="text-[10px] font-bold">
+                    {status.label}
+                  </Badge>
+                  <span className="text-sm font-bold text-slate-800 tabular-nums">
+                    {formatCurrency(order.total)}
+                  </span>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -288,52 +252,58 @@ async function TopProductsSection({ storeSlug }: { storeSlug: string }) {
   const maxSold = products[0]?.soldQuantity ?? 1;
 
   return (
-    <Card className="h-full">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-        <CardTitle className="text-base font-semibold">أفضل المنتجات مبيعاً</CardTitle>
-        <SectionLink href={`/dashboard/stores/${storeSlug}/products`} label="عرض الكل" />
-      </CardHeader>
-      <CardContent>
-        {products.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-8 text-center">
-            <Package className="h-10 w-10 text-muted-foreground/40 mb-3" />
-            <p className="text-sm font-medium text-muted-foreground">لا توجد بيانات مبيعات</p>
-            <p className="text-xs text-muted-foreground/80 mt-1">
-              أضف منتجات وابدأ البيع لرؤية الإحصائيات
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {products.map((product, i) => (
-              <div key={product._id} className="flex items-center gap-3">
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-bold text-muted-foreground">
-                  {i + 1}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center justify-between gap-2 mb-1.5">
-                    <p className="text-sm font-medium truncate">{product.name}</p>
-                    <span className="text-sm font-semibold shrink-0 tabular-nums">
-                      {formatCurrency(product.revenue)}
-                    </span>
-                  </div>
-                  <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-                    <div
-                      className="h-full rounded-full bg-primary transition-all"
-                      style={{
-                        width: `${Math.min(100, (product.soldQuantity / maxSold) * 100)}%`,
-                      }}
-                    />
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {product.soldQuantity.toLocaleString("ar-EG")} وحدة مباعة
-                  </p>
+    <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-base font-black text-slate-955">أفضل المنتجات مبيعاً</h3>
+          <p className="text-xs text-slate-400 mt-0.5">المنتجات الأكثر طلباً وشعبية</p>
+        </div>
+        <Link
+          href={`/dashboard/stores/${storeSlug}/products`}
+          className="text-xs font-bold text-teal-600 hover:underline inline-flex items-center gap-1"
+        >
+          <span>عرض الكل</span>
+          <ArrowLeft className="h-3 w-3" />
+        </Link>
+      </div>
+
+      {products.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-8 text-center">
+          <Package className="h-10 w-10 text-slate-300 mb-3" />
+          <p className="text-sm font-bold text-slate-700">لا توجد بيانات مبيعات</p>
+          <p className="text-xs text-slate-400 mt-1">أضف منتجات وابدأ البيع لرؤية الإحصائيات</p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {products.map((product, i) => (
+            <div key={product._id} className="flex items-center gap-3">
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-100 text-[10px] font-black text-slate-700">
+                {i + 1}
+              </span>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center justify-between gap-2 mb-1.5">
+                  <p className="text-sm font-black text-slate-800 truncate">{product.name}</p>
+                  <span className="text-sm font-bold text-slate-955 shrink-0 tabular-nums">
+                    {formatCurrency(product.revenue)}
+                  </span>
                 </div>
+                <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-teal-500 transition-all duration-300"
+                    style={{
+                      width: `${Math.min(100, (product.soldQuantity / maxSold) * 100)}%`,
+                    }}
+                  />
+                </div>
+                <p className="text-[10px] text-slate-400 mt-1">
+                  {product.soldQuantity.toLocaleString("ar-EG")} وحدة مباعة
+                </p>
               </div>
-            ))}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -342,55 +312,60 @@ async function LowStockSection({ storeSlug }: { storeSlug: string }) {
   const products = result.data ?? [];
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-        <CardTitle className="text-base font-semibold flex items-center gap-2">
-          <AlertTriangle className="h-4 w-4 text-amber-500" />
-          تنبيهات المخزون المنخفض
-          {products.length > 0 && (
-            <Badge variant="warning">{products.length}</Badge>
-          )}
-        </CardTitle>
+    <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-base font-black text-slate-955 flex items-center gap-2">
+            <AlertTriangle className="h-5 w-5 text-amber-500 shrink-0 animate-pulse" />
+            <span>تنبيهات المخزون المنخفض</span>
+            {products.length > 0 && (
+              <Badge className="bg-amber-100 hover:bg-amber-100 text-amber-700 border-amber-200 font-bold text-xs">
+                {products.length}
+              </Badge>
+            )}
+          </h3>
+          <p className="text-xs text-slate-400 mt-0.5">المنتجات التي اقتربت كميتها من النفاد</p>
+        </div>
         {products.length > 0 && (
-          <SectionLink href={`/dashboard/stores/${storeSlug}/inventory`} label="إدارة المخزون" />
+          <Link
+            href={`/dashboard/stores/${storeSlug}/inventory`}
+            className="text-xs font-bold text-teal-600 hover:underline"
+          >
+            إدارة المخزون
+          </Link>
         )}
-      </CardHeader>
-      <CardContent>
-        {products.length === 0 ? (
-          <div className="flex items-center gap-3 rounded-lg bg-green-50 dark:bg-green-950/20 px-4 py-3">
-            <CheckCircle2 className="h-5 w-5 text-green-600 shrink-0" />
-            <div>
-              <p className="text-sm font-medium text-green-800 dark:text-green-200">
-                المخزون بحالة جيدة
-              </p>
-              <p className="text-xs text-green-700/80 dark:text-green-300/80">
-                جميع المنتجات فوق حد التنبيه
-              </p>
-            </div>
+      </div>
+
+      {products.length === 0 ? (
+        <div className="flex items-center gap-3 rounded-2xl bg-emerald-50/50 border border-emerald-100 px-4 py-3 text-emerald-950">
+          <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0" />
+          <div>
+            <p className="text-sm font-bold text-emerald-800">المخزون بحالة ممتازة</p>
+            <p className="text-xs text-emerald-600 mt-0.5">جميع المنتجات فوق حد التنبيه الآمن</p>
           </div>
-        ) : (
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {products.slice(0, 6).map((product) => (
-              <div
-                key={product._id}
-                className="flex items-center justify-between gap-3 rounded-lg border bg-muted/30 px-3 py-2.5"
-              >
-                <div className="min-w-0">
-                  <p className="text-sm font-medium truncate">{product.name}</p>
-                  <p className="text-xs text-muted-foreground">SKU: {product.sku}</p>
-                </div>
-                <Badge
-                  variant={product.stockQuantity === 0 ? "destructive" : "warning"}
-                  className="shrink-0"
-                >
-                  {product.stockQuantity === 0 ? "نفد" : `${product.stockQuantity} متبقي`}
-                </Badge>
+        </div>
+      ) : (
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {products.slice(0, 6).map((product) => (
+            <div
+              key={product._id}
+              className="flex items-center justify-between gap-3 rounded-2xl border border-slate-100 bg-slate-50/30 px-4 py-3"
+            >
+              <div className="min-w-0">
+                <p className="text-sm font-bold text-slate-800 truncate">{product.name}</p>
+                <p className="text-[10px] text-slate-400 mt-0.5">SKU: {product.sku}</p>
               </div>
-            ))}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+              <Badge
+                variant={product.stockQuantity === 0 ? "destructive" : "warning"}
+                className="shrink-0 text-[10px] font-bold"
+              >
+                {product.stockQuantity === 0 ? "نفد" : `${product.stockQuantity} متبقي`}
+              </Badge>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -443,16 +418,32 @@ export default async function AdminDashboardPage({ params }: Props) {
   const today = formatDate(new Date());
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8" dir="rtl">
       {/* Header */}
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">لوحة التحكم</h1>
-          <p className="text-muted-foreground mt-1">
-            نظرة عامة على أداء متجرك — {today}
+          <h1 className="text-3xl font-black text-slate-955">لوحة التحكم للمتجر</h1>
+          <p className="text-xs text-slate-400 mt-1">
+            نظرة عامة على أداء متجرك وإحصائيات البيع — {today}
           </p>
         </div>
-        <QuickActions storeSlug={storeSlug} />
+        <div className="flex items-center gap-2">
+          <Link
+            href={`/${storeSlug}`}
+            target="_blank"
+            className="inline-flex h-10 items-center justify-center gap-1.5 rounded-full border border-slate-200 bg-white px-4 text-xs font-bold text-slate-700 hover:border-slate-300 hover:bg-slate-50 transition shadow-sm"
+          >
+            <ExternalLink className="h-4 w-4" />
+            <span>معاينة المتجر</span>
+          </Link>
+          <Link
+            href={`/dashboard/stores/${storeSlug}/products/new`}
+            className="inline-flex h-10 items-center justify-center gap-1.5 rounded-full bg-slate-900 px-5 text-xs font-bold text-white hover:bg-slate-800 transition"
+          >
+            <Plus className="h-4 w-4" />
+            <span>إضافة منتج جديد</span>
+          </Link>
+        </div>
       </div>
 
       {/* Pending orders alert */}
@@ -460,28 +451,26 @@ export default async function AdminDashboardPage({ params }: Props) {
         <PendingOrdersBanner storeSlug={storeSlug} />
       </Suspense>
 
-      {/* Stats */}
+      {/* Stats Grid */}
       <Suspense fallback={<StatsSkeleton />}>
         <DashboardStats />
       </Suspense>
 
-      {/* Chart */}
-      <Suspense
-        fallback={
-          <Card>
-            <CardHeader>
+      {/* Sales Chart Section */}
+      <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+        <Suspense
+          fallback={
+            <div className="space-y-4">
               <Skeleton className="h-5 w-48" />
-            </CardHeader>
-            <CardContent>
               <Skeleton className="h-72 w-full" />
-            </CardContent>
-          </Card>
-        }
-      >
-        <SalesChartSection />
-      </Suspense>
+            </div>
+          }
+        >
+          <SalesChartSection />
+        </Suspense>
+      </div>
 
-      {/* Recent orders & top products */}
+      {/* Recent orders & top products grid */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Suspense fallback={<CardSkeleton height="h-56" />}>
           <RecentOrdersSection storeSlug={storeSlug} />
@@ -492,7 +481,7 @@ export default async function AdminDashboardPage({ params }: Props) {
         </Suspense>
       </div>
 
-      {/* Low stock */}
+      {/* Low stock alerts */}
       <Suspense fallback={<CardSkeleton height="h-32" />}>
         <LowStockSection storeSlug={storeSlug} />
       </Suspense>

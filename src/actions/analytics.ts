@@ -1,26 +1,25 @@
 // src/actions/analytics.ts
 "use server";
 
-import mongoose from "mongoose";  // ✅ أضف هذا السطر
+import mongoose from "mongoose";
 import { connectToDatabase } from "@/lib/db/mongodb";
 import Order from "@/models/Order";
 import Product from "@/models/Product";
 import User from "@/models/User";
 import Tenant from "@/models/Tenant";
 import Store from "@/models/Store";
+import Wishlist from "@/models/Wishlist";
 import { auth } from "@/lib/auth";
 import { serialize } from "@/lib/serialize";
 import type { ApiResponse, DashboardStats, SalesData, TopProduct } from "@/types";
 
-// تأكد من تسجيل جميع النماذج
 import "@/models";
 
-export async function getDashboardStatsAction(): Promise<
+export async function getDashboardStatsAction(storeSlug?: string): Promise<
   ApiResponse<DashboardStats>
 > {
   const session = await auth();
   
-  // ✅ تعديل الشرط ليشمل الأدوار الجديدة
   if (!session?.user || !["super_admin", "tenant_admin", "store_admin"].includes(session.user.role)) {
     return { success: false, error: "Insufficient permissions" };
   }
@@ -33,22 +32,27 @@ export async function getDashboardStatsAction(): Promise<
     const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
     const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
 
-    // ✅ بناء query مع tenantId للمستأجر
+    let storeId: mongoose.Types.ObjectId | undefined;
+    if (storeSlug) {
+      const store = await Store.findOne({ slug: storeSlug }).select("_id");
+      if (store) storeId = store._id;
+    }
+
     let orderQuery: any = { status: { $ne: "cancelled" } };
     let productQuery: any = { isDeleted: false, isActive: true };
     let userQuery: any = { isActive: true };
     
-    // إذا كان مستأجر عادي (وليس super_admin)
-    if (session.user.role !== "super_admin" && session.user.tenantId) {
+    if (storeId) {
+      orderQuery.storeId = storeId;
+      productQuery.storeId = storeId;
+      userQuery.storeId = storeId;
+    } else if (session.user.role !== "super_admin" && session.user.tenantId) {
       orderQuery.tenantId = new mongoose.Types.ObjectId(session.user.tenantId);
       productQuery.tenantId = new mongoose.Types.ObjectId(session.user.tenantId);
       userQuery.tenantId = new mongoose.Types.ObjectId(session.user.tenantId);
     }
     
-    // إضافة شرط الشهر الحالي
     const currentMonthQuery = { ...orderQuery, createdAt: { $gte: startOfMonth } };
-    
-    // شرط الشهر الماضي
     const lastMonthQuery = { 
       ...orderQuery, 
       createdAt: { $gte: startOfLastMonth, $lte: endOfLastMonth } 
@@ -112,7 +116,8 @@ export async function getDashboardStatsAction(): Promise<
 }
 
 export async function getSalesDataAction(
-  period: "7d" | "30d" | "90d" | "1y" = "30d"
+  period: "7d" | "30d" | "90d" | "1y" = "30d",
+  storeSlug?: string
 ): Promise<ApiResponse<SalesData[]>> {
   const session = await auth();
   if (!session?.user || !["super_admin", "tenant_admin", "store_admin"].includes(session.user.role)) {
@@ -126,12 +131,20 @@ export async function getSalesDataAction(
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
 
+    let storeId: mongoose.Types.ObjectId | undefined;
+    if (storeSlug) {
+      const store = await Store.findOne({ slug: storeSlug }).select("_id");
+      if (store) storeId = store._id;
+    }
+
     let matchQuery: any = {
       createdAt: { $gte: startDate },
       status: { $ne: "cancelled" },
     };
     
-    if (session.user.role !== "super_admin" && session.user.tenantId) {
+    if (storeId) {
+      matchQuery.storeId = storeId;
+    } else if (session.user.role !== "super_admin" && session.user.tenantId) {
       matchQuery.tenantId = new mongoose.Types.ObjectId(session.user.tenantId);
     }
 
@@ -167,7 +180,8 @@ export async function getSalesDataAction(
 }
 
 export async function getTopProductsAction(
-  limit = 10
+  limit = 10,
+  storeSlug?: string
 ): Promise<ApiResponse<TopProduct[]>> {
   const session = await auth();
   if (!session?.user || !["super_admin", "tenant_admin", "store_admin"].includes(session.user.role)) {
@@ -179,7 +193,10 @@ export async function getTopProductsAction(
 
     let query: any = { isDeleted: false, soldQuantity: { $gt: 0 } };
     
-    if (session.user.role !== "super_admin" && session.user.tenantId) {
+    if (storeSlug) {
+      const store = await Store.findOne({ slug: storeSlug }).select("_id");
+      if (store) query.storeId = store._id;
+    } else if (session.user.role !== "super_admin" && session.user.tenantId) {
       query.tenantId = new mongoose.Types.ObjectId(session.user.tenantId);
     }
 
@@ -206,7 +223,8 @@ export async function getTopProductsAction(
 }
 
 export async function getLowStockProductsAction(
-  threshold = 10
+  threshold = 10,
+  storeSlug?: string
 ): Promise<ApiResponse<Array<{ _id: string; name: string; sku: string; stockQuantity: number; lowStockThreshold: number }>>> {
   const session = await auth();
   if (!session?.user || !["super_admin", "tenant_admin", "store_admin"].includes(session.user.role)) {
@@ -222,7 +240,10 @@ export async function getLowStockProductsAction(
       $expr: { $lte: ["$stockQuantity", "$lowStockThreshold"] },
     };
     
-    if (session.user.role !== "super_admin" && session.user.tenantId) {
+    if (storeSlug) {
+      const store = await Store.findOne({ slug: storeSlug }).select("_id");
+      if (store) query.storeId = store._id;
+    } else if (session.user.role !== "super_admin" && session.user.tenantId) {
       query.tenantId = new mongoose.Types.ObjectId(session.user.tenantId);
     }
 
@@ -248,7 +269,9 @@ export async function getLowStockProductsAction(
   }
 }
 
-export async function getOrdersStatsByStatusAction(): Promise<
+export async function getOrdersStatsByStatusAction(
+  storeSlug?: string
+): Promise<
   ApiResponse<Array<{ status: string; count: number; revenue: number }>>
 > {
   const session = await auth();
@@ -260,7 +283,10 @@ export async function getOrdersStatsByStatusAction(): Promise<
     await connectToDatabase();
 
     let matchQuery: any = {};
-    if (session.user.role !== "super_admin" && session.user.tenantId) {
+    if (storeSlug) {
+      const store = await Store.findOne({ slug: storeSlug }).select("_id");
+      if (store) matchQuery.storeId = store._id;
+    } else if (session.user.role !== "super_admin" && session.user.tenantId) {
       matchQuery.tenantId = new mongoose.Types.ObjectId(session.user.tenantId);
     }
 
@@ -287,5 +313,57 @@ export async function getOrdersStatsByStatusAction(): Promise<
   } catch (error) {
     console.error("Get orders stats error:", error);
     return { success: false, error: "Failed to fetch orders stats" };
+  }
+}
+
+export async function getMostFavoritedProductsAction(
+  limit = 10,
+  storeSlug?: string
+): Promise<ApiResponse<Array<{ _id: string; name: string; thumbnail?: string; count: number }>>> {
+  const session = await auth();
+  if (!session?.user || !["super_admin", "tenant_admin", "store_admin"].includes(session.user.role)) {
+    return { success: false, error: "Insufficient permissions" };
+  }
+
+  try {
+    await connectToDatabase();
+
+    let query: any = {};
+    if (storeSlug) {
+      const store = await Store.findOne({ slug: storeSlug }).select("_id");
+      if (store) query.storeId = store._id;
+    } else if (session.user.role !== "super_admin" && session.user.tenantId) {
+      query.tenantId = new mongoose.Types.ObjectId(session.user.tenantId);
+    }
+
+    const wishlistCounts = await Wishlist.aggregate([
+      { $match: query },
+      { $unwind: "$items" },
+      { $group: { _id: "$items.productId", count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+      { $limit: limit },
+    ]);
+
+    const productIds = wishlistCounts.map((w) => w._id);
+    const products = await Product.find({ _id: { $in: productIds } })
+      .select("name thumbnail")
+      .lean();
+
+    const productsMap = new Map(products.map((p) => [p._id.toString(), p]));
+
+    const result = wishlistCounts.map((w) => {
+      const p = productsMap.get(w._id.toString());
+      return {
+        _id: w._id.toString(),
+        name: p?.name ?? "Unknown Product",
+        thumbnail: p?.thumbnail ?? "",
+        count: w.count,
+      };
+    });
+
+    return { success: true, data: result };
+  } catch (error) {
+    console.error("Get most favorited products error:", error);
+    return { success: false, error: "Failed to fetch most favorited products" };
   }
 }

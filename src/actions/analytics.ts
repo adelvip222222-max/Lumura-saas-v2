@@ -367,3 +367,128 @@ export async function getMostFavoritedProductsAction(
     return { success: false, error: "Failed to fetch most favorited products" };
   }
 }
+
+export async function getSalesReportAction(
+  startDateStr: string,
+  endDateStr: string,
+  storeId?: string
+): Promise<ApiResponse<{
+  totalRevenue: number;
+  totalOrders: number;
+  totalItemsSold: number;
+  totalProfit: number;
+  orders: Array<{
+    _id: string;
+    orderNumber: string;
+    storeName: string;
+    customerName: string;
+    createdAt: string;
+    status: string;
+    paymentMethod: string;
+    total: number;
+    itemsCount: number;
+    itemsList: string;
+  }>;
+}>> {
+  const session = await auth();
+  if (!session?.user || !["super_admin", "tenant_admin", "store_admin"].includes(session.user.role)) {
+    return { success: false, error: "Insufficient permissions" };
+  }
+
+  try {
+    await connectToDatabase();
+
+    const start = new Date(startDateStr);
+    start.setHours(0, 0, 0, 0);
+
+    const end = new Date(endDateStr);
+    end.setHours(23, 59, 59, 999);
+
+    let matchQuery: any = {
+      createdAt: { $gte: start, $lte: end },
+      status: { $ne: "cancelled" },
+    };
+
+    if (storeId && storeId !== "all") {
+      matchQuery.storeId = new mongoose.Types.ObjectId(storeId);
+    } else {
+      if (session.user.role !== "super_admin") {
+        if (!session.user.tenantId) {
+          return { success: false, error: "Tenant ID is required" };
+        }
+        matchQuery.tenantId = new mongoose.Types.ObjectId(session.user.tenantId);
+      }
+    }
+
+    const orders = await Order.find(matchQuery)
+      .populate("storeId", "name")
+      .populate("userId", "name email")
+      .sort({ createdAt: -1 })
+      .lean();
+
+    const productIds = new Set<string>();
+    for (const order of orders) {
+      for (const item of order.items) {
+        if (item.productId) {
+          productIds.add(item.productId.toString());
+        }
+      }
+    }
+
+    const products = await Product.find({ _id: { $in: Array.from(productIds) } })
+      .select("_id purchasePrice")
+      .lean();
+    const productPriceMap = new Map(products.map(p => [p._id.toString(), p.purchasePrice || 0]));
+
+    let totalRevenue = 0;
+    let totalOrders = 0;
+    let totalItemsSold = 0;
+    let totalCost = 0;
+
+    const formattedOrders = orders.map((order: any) => {
+      totalRevenue += order.total || 0;
+      totalOrders += 1;
+
+      let itemsCount = 0;
+      const itemsList = order.items.map((item: any) => {
+        const qty = item.quantity || 0;
+        itemsCount += qty;
+        totalItemsSold += qty;
+
+        const purchasePrice = productPriceMap.get(item.productId?.toString() || "") || (item.price * 0.6);
+        totalCost += purchasePrice * qty;
+
+        return `${item.name} (${qty})`;
+      }).join(", ");
+
+      return {
+        _id: order._id.toString(),
+        orderNumber: order.orderNumber,
+        storeName: order.storeId?.name || "Unknown Store",
+        customerName: order.userId?.name || order.userId?.email || "Guest",
+        createdAt: order.createdAt.toISOString(),
+        status: order.status,
+        paymentMethod: order.paymentMethod,
+        total: order.total,
+        itemsCount,
+        itemsList,
+      };
+    });
+
+    const totalProfit = totalRevenue - totalCost;
+
+    return {
+      success: true,
+      data: {
+        totalRevenue,
+        totalOrders,
+        totalItemsSold,
+        totalProfit,
+        orders: formattedOrders,
+      },
+    };
+  } catch (error) {
+    console.error("Get sales report error:", error);
+    return { success: false, error: "Failed to generate sales report" };
+  }
+}

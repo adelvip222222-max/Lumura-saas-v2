@@ -39,3 +39,30 @@ export interface CartState {
   discount: number;
   total: number;
 }
+
+export interface DashboardStats {
+  totalRevenue: number;
+  totalOrders: number;
+  totalProducts: number;
+  totalCustomers: number;
+  revenueGrowth: number;
+  ordersGrowth: number;
+  productsGrowth: number;
+  customersGrowth: number;
+}
+
+export interface SalesData {
+  date: string;
+  revenue: number;
+  orders: number;
+  profit: number;
+}
+
+export interface TopProduct {
+  _id: string;
+  name: string;
+  slug: string;
+  image: string;
+  soldQuantity: number;
+  revenue: number;
+}

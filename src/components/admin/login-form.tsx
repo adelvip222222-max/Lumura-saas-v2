@@ -57,7 +57,10 @@ export function AdminLoginForm() {
       toast.success("تم تسجيل الدخول بنجاح");
 
       // Redirect
-      const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
+      let callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
+      if (!callbackUrl.startsWith("/") || callbackUrl.startsWith("//") || callbackUrl.startsWith("/\\")) {
+        callbackUrl = "/dashboard";
+      }
       setTimeout(() => {
         router.push(callbackUrl);
         router.refresh();

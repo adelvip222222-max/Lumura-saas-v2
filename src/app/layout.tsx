@@ -62,6 +62,17 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${inter.variable} ${cairo.variable}`}
     >
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if (window.top !== window.self) {
+                window.top.location.replace(window.self.location.href);
+              }
+            `,
+          }}
+        />
+      </head>
       <body className="min-h-screen bg-background font-arabic antialiased">
         <AuthProvider>
           <ThemeProvider

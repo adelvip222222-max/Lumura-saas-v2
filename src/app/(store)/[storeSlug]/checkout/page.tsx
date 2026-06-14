@@ -19,6 +19,7 @@ export default function StoreCheckoutPage() {
   const params  = useParams<{ storeSlug: string }>();
   const base    = `/${params.storeSlug}`;
   const [isLoading, setIsLoading] = useState(false);
+  const [checkingAuth, setCheckingAuth] = useState(true);
   const [paymentMethod, setPaymentMethod] = useState<"cash_on_delivery" | "stripe">("cash_on_delivery");
 
   const { items, subtotal, tax, shipping, discount, total, clearCart, refreshCart } = useCartStore();
@@ -26,6 +27,25 @@ export default function StoreCheckoutPage() {
   useEffect(() => {
     refreshCart();
   }, [refreshCart]);
+
+  useEffect(() => {
+    async function verifySession() {
+      try {
+        const res = await fetch(`/api/customer/session?storeSlug=${encodeURIComponent(params.storeSlug)}`);
+        const data = await res.json();
+        if (!data.user) {
+          toast.error("يجب تسجيل الدخول أولاً لإتمام عملية الشراء");
+          router.push(`${base}/login?callbackUrl=${base}/checkout`);
+        } else {
+          setCheckingAuth(false);
+        }
+      } catch (error) {
+        console.error("Session verification error:", error);
+        setCheckingAuth(false);
+      }
+    }
+    void verifySession();
+  }, [params.storeSlug, base, router]);
 
   const { register, handleSubmit, formState: { errors } } = useForm<CreateOrderInput>({
     resolver: zodResolver(createOrderSchema),
@@ -102,6 +122,14 @@ const onSubmit = async (data: CreateOrderInput) => {
     setIsLoading(false);
   }
 };
+
+  if (checkingAuth) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <p className="text-muted-foreground font-serif text-lg">جاري التحقق من الهوية...</p>
+      </div>
+    );
+  }
 
   if (items.length === 0) { router.push(`${base}/cart`); return null; }
 

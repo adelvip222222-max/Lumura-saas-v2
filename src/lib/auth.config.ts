@@ -50,7 +50,7 @@ export const authConfig = {
         }
       } catch {}
 
-      if (url.startsWith("/")) return `${currentBaseUrl}${url}`;
+      if (url.startsWith("/") && !url.startsWith("//") && !url.startsWith("/\\")) return `${currentBaseUrl}${url}`;
       
       try {
         const parsed = new URL(url);

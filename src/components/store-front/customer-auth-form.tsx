@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { CheckCircle2, Eye, EyeOff, Lock, Mail, Phone, User, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -23,6 +23,8 @@ const passwordRules = [
 
 export function CustomerAuthForm({ storeSlug, storeName, defaultTab = "login" }: Props) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get("callbackUrl");
   const [tab, setTab] = useState<"login" | "register">(defaultTab);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -61,7 +63,11 @@ export function CustomerAuthForm({ storeSlug, storeName, defaultTab = "login" }:
         return;
       }
       toast.success(tab === "login" ? "مرحبًا بعودتك" : "تم إنشاء حسابك");
-      router.push(`/${storeSlug}/account`);
+      if (callbackUrl) {
+        router.push(callbackUrl);
+      } else {
+        router.push(`/${storeSlug}/account`);
+      }
       router.refresh();
     } catch {
       toast.error("حدث خطأ. يرجى المحاولة مرة أخرى");

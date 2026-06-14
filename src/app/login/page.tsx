@@ -64,7 +64,10 @@ export default function LoginPage() {
 
     const callbackUrl = searchParams.get("callbackUrl");
     const redirectTo =
-      callbackUrl?.startsWith("/") && !callbackUrl.startsWith("/login")
+      callbackUrl?.startsWith("/") &&
+      !callbackUrl.startsWith("//") &&
+      !callbackUrl.startsWith("/\\") &&
+      !callbackUrl.startsWith("/login")
         ? callbackUrl
         : getRedirectPath(session?.user as SessionUser);
 

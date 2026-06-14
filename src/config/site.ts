@@ -1,8 +1,10 @@
 // src/config/site.ts
+const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+
 export const siteConfig = {
   name: "MEMO DEV",
   description: "منصة متكاملة لإنشاء وإدارة المتاجر الإلكترونية",
-  url: "http://localhost:3000",
+  url: appUrl,
   keywords: ["SaaS", "store", "ecommerce"],
   currency: {
     code: "EGP",

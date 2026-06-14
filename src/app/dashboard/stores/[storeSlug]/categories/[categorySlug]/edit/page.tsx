@@ -143,7 +143,7 @@ export default function EditCategoryPage() {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-base">Subcategories</CardTitle>
-                  <Button type="button" variant="outline" size="sm" onClick={() => append({ name: "", slug: "" })}>
+                  <Button type="button" variant="outline" size="sm" onClick={() => append({ name: "", slug: "", isActive: true, sortOrder: fields.length })}>
                     <Plus className="h-4 w-4 mr-1" /> Add
                   </Button>
                 </div>

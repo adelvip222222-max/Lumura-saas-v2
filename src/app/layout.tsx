@@ -6,8 +6,6 @@ import { LocaleProvider } from "@/providers/locale-provider"; // ✅ هذا صح
 import { CartProvider } from "@/providers/cart-provider";
 import { Toaster } from "sonner";
 import { siteConfig } from "@/config/site";
-import { PWARegister } from "@/components/pwa-register";
-import NextTopLoader from "nextjs-toploader";
 import "@/app/globals.css";
 
 const inter = Inter({
@@ -32,11 +30,6 @@ export const metadata: Metadata = {
   keywords: [...siteConfig.keywords],
   authors: [{ name: siteConfig.name }],
   creator: siteConfig.name,
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: "default",
-    title: siteConfig.name,
-  },
   openGraph: {
     type: "website",
     locale: "ar_EG", // ✅ تغيير إلى العربية
@@ -54,6 +47,7 @@ export const metadata: Metadata = {
     index: true,
     follow: true,
   },
+  manifest: "/manifest.webmanifest",
 };
 
 export default function RootLayout({
@@ -69,8 +63,6 @@ export default function RootLayout({
       className={`${inter.variable} ${cairo.variable}`}
     >
       <body className="min-h-screen bg-background font-arabic antialiased">
-        <NextTopLoader showSpinner={false} color="var(--store-primary, #f97316)" height={3} />
-        <PWARegister />
         <AuthProvider>
           <ThemeProvider
             attribute="class"

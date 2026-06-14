@@ -56,7 +56,7 @@ export default async function StoreOrdersPage({ params, searchParams }: Props) {
   ];
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-7xl">
+    <div className="container py-8 px-4">
       <h1 className="text-3xl font-bold mb-2 font-serif">طلباتي</h1>
       <p className="text-sm text-muted-foreground mb-8">{customer.storeName}</p>
 

@@ -91,7 +91,7 @@ export default async function StoreCategoryPage({ params, searchParams }: Props)
   ];
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-7xl">
+    <div className="container py-8">
       {/* Breadcrumb */}
       <nav className="flex items-center gap-1.5 text-sm text-muted-foreground mb-6">
         <Link href={base} className="hover:text-foreground">Home</Link>

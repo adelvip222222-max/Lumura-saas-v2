@@ -44,17 +44,15 @@ export default async function StoreHomePage({ params }: Props) {
   const store = await getStoreBySlug(storeSlug, { publicOnly: true });
   if (!store) notFound();
 
-  const [categories, productsResult, brands, offersResult] = await Promise.all([
+  const [categories, productsResult, brands] = await Promise.all([
     getStoreCategories(storeSlug),
     getStoreProducts(storeSlug, { isActive: true, limit: 16, page: 1 }),
     getStoreBrands(storeSlug),
-    getStoreProducts(storeSlug, { isActive: true, onlyOffers: true, limit: 8, page: 1 }),
   ]);
 
   const plainCategories = serializeMongoDocs(categories);
   const plainBrands = serializeMongoDocs(brands);
   const plainProducts = serializeMongoDocs(productsResult.products ?? []);
-  const plainOffers = serializeMongoDocs(offersResult.products ?? []);
   const featuredProducts = plainProducts.filter((p: any) => p.isFeatured).slice(0, 8);
   const newProducts = plainProducts.slice(0, 8);
   const heroProducts = plainProducts.slice(0, 3);
@@ -121,20 +119,6 @@ export default async function StoreHomePage({ params }: Props) {
                 </Link>
               ))}
             </div>
-          </div>
-        </section>
-      )}
-
-      {plainOffers.length > 0 && (
-        <section className="border-b border-red-100 bg-red-50/20 py-16">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <SectionTitle
-              eyebrow={isAr ? "عروض حصرية" : "Special discounts"}
-              title={isAr ? "أقوى العروض والخصومات 🔥" : "Hot Offers & Discounts 🔥"}
-              href={`/${storeSlug}/products?offers=true`}
-              hrefLabel={isAr ? "كل العروض" : "All offers"}
-            />
-            <ProductGrid products={plainOffers} storeSlug={storeSlug} theme={theme} />
           </div>
         </section>
       )}

@@ -14,8 +14,8 @@ import { FormField } from "@/components/admin/form-field";
 import { PageHeader } from "@/components/admin/page-header";
 import { updateProductSchema, type UpdateProductInput } from "@/schemas/product";
 import { updateProductAction } from "@/actions/products";
-import { getCategoriesAction } from "@/actions/categories";
-import { getBrandsAction } from "@/actions/brands";
+import { getStoreCategoriesAction } from "@/actions/categories";
+import { getStoreBrandsAction } from "@/actions/brands";
 import type { ICategory } from "@/lib/db/models/Category";
 import type { IBrand } from "@/lib/db/models/Brand";
 import type { IProduct } from "@/lib/db/models/Product";
@@ -49,15 +49,25 @@ export function ProductEditForm({ product, storeSlug }: ProductEditFormProps) {
   const [tagInput, setTagInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
+  const rawCategory = product.category as unknown as
+    | string
+    | { _id?: { toString?: () => string } }
+    | null
+    | undefined;
   const categoryId =
-    typeof product.category === "object" && "_id" in product.category
-      ? (product.category as { _id: string })._id.toString()
-      : product.category?.toString() ?? "";
+    rawCategory && typeof rawCategory === "object" && "_id" in rawCategory
+      ? rawCategory._id?.toString?.() ?? ""
+      : rawCategory?.toString?.() ?? "";
 
+  const rawBrand = product.brand as unknown as
+    | string
+    | { _id?: { toString?: () => string } }
+    | null
+    | undefined;
   const brandId =
-    typeof product.brand === "object" && "_id" in product.brand
-      ? (product.brand as { _id: string })._id.toString()
-      : product.brand?.toString() ?? "";
+    rawBrand && typeof rawBrand === "object" && "_id" in rawBrand
+      ? rawBrand._id?.toString?.() ?? ""
+      : rawBrand?.toString?.() ?? "";
 
   const {
     register,
@@ -124,8 +134,8 @@ export function ProductEditForm({ product, storeSlug }: ProductEditFormProps) {
   useEffect(() => {
     async function loadData() {
       const [catResult, brandResult] = await Promise.all([
-        getCategoriesAction(false),
-        getBrandsAction(false),
+        getStoreCategoriesAction(storeSlug, false),
+        getStoreBrandsAction(storeSlug, false),
       ]);
       if (catResult.success && catResult.data) setCategories(catResult.data as ICategory[]);
       if (brandResult.success && brandResult.data) setBrands(brandResult.data as IBrand[]);

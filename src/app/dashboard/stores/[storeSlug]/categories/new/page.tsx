@@ -12,7 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FormField } from "@/components/admin/form-field";
 import { PageHeader } from "@/components/admin/page-header";
 import { createCategorySchema, type CreateCategoryInput } from "@/schemas/category";
-import { createCategoryAction } from "@/actions/categories";
+import { createStoreCategoryAction } from "@/actions/categories";
 import { useTranslation } from "@/hooks/use-translation";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
@@ -53,7 +53,7 @@ export default function NewCategoryPage() {
   const onSubmit = async (data: CreateCategoryInput) => {
     setIsSubmitting(true);
     try {
-      const result = await createCategoryAction(data, storeSlug);
+      const result = await createStoreCategoryAction(storeSlug, data);
       if (!result.success) {
         toast.error(result.error ?? (isAr ? "فشل الإنشاء" : "Failed to create"));
         return;

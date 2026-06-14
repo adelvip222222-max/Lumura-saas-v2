@@ -12,8 +12,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FormField } from "@/components/admin/form-field";
 import { updateProductSchema, type UpdateProductInput } from "@/schemas/product";
 import { updateProductAction } from "@/actions/products";
-import { getCategoriesAction } from "@/actions/categories";
-import { getBrandsAction } from "@/actions/brands";
+import { getStoreCategoriesAction } from "@/actions/categories";
+import { getStoreBrandsAction } from "@/actions/brands";
 import { cn } from "@/lib/utils";
 import type { ICategory } from "@/lib/db/models/Category";
 import type { IBrand } from "@/lib/db/models/Brand";
@@ -23,6 +23,7 @@ const UNIT_TYPES = ["piece","kg","gram","liter","meter","box","pack","set","pair
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function ProductEditForm({ product }: { product: any }) {
   const router = useRouter();
+  const storeSlug = product.storeSlug ?? product.store?.slug ?? "";
   const [categories, setCategories] = useState<ICategory[]>([]);
   const [brands, setBrands] = useState<IBrand[]>([]);
   const [tagInput, setTagInput] = useState("");
@@ -92,13 +93,13 @@ export function ProductEditForm({ product }: { product: any }) {
   );
 
   useEffect(() => {
-    getCategoriesAction(false).then((r) => {
+    getStoreCategoriesAction(storeSlug, false).then((r) => {
       if (r.success && r.data) setCategories(r.data as ICategory[]);
     });
-    getBrandsAction(false).then((r) => {
+    getStoreBrandsAction(storeSlug, false).then((r) => {
       if (r.success && r.data) setBrands(r.data as IBrand[]);
     });
-  }, []);
+  }, [storeSlug]);
 
   function handleAddTag() {
     const t = tagInput.trim().toLowerCase();

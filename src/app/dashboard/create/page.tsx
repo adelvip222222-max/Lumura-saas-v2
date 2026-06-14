@@ -7,7 +7,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { ArrowRight, Store, Globe, Mail, Phone, MapPin, Image, Palette, Upload, X, Loader2 } from "lucide-react";
+import { ArrowRight, Store, Globe, Mail, Palette, Upload, X, Loader2, Tags } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,6 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { createStoreAction } from "@/actions/stores";
 import { ThemePresetSelector } from "@/components/admin/theme-preset-selector";
 import { getDefaultTheme } from "@/config/store-themes";
+import { BUSINESS_CATALOG_PRESETS } from "@/config/business-catalog-presets";
 
 // ✅ Schema التحقق
 const createStoreSchema = z.object({
@@ -53,6 +54,7 @@ const createStoreSchema = z.object({
   iconStyle: z.enum(["outline", "solid", "duotone"]).default("duotone"),
   fontFamily: z.enum(["system", "cairo", "tajawal", "inter"]).default("system"),
   cornerRadius: z.enum(["sharp", "soft", "rounded"]).default("soft"),
+  businessCategory: z.enum(["electronics", "fashion", "beauty", "grocery", "home", "sports"]).default("electronics"),
 });
 
 type CreateStoreForm = z.infer<typeof createStoreSchema>;
@@ -97,6 +99,7 @@ export default function CreateStorePage() {
       iconStyle: defaultTheme.iconStyle,
       fontFamily: defaultTheme.fontFamily,
       cornerRadius: defaultTheme.cornerRadius,
+      businessCategory: "electronics",
     },
   });
 
@@ -245,6 +248,7 @@ export default function CreateStorePage() {
         iconStyle: data.iconStyle,
         fontFamily: data.fontFamily,
         cornerRadius: data.cornerRadius,
+        businessCategory: data.businessCategory,
       });
 
       if (result.success) {
@@ -280,7 +284,7 @@ export default function CreateStorePage() {
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)}>
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <Tabs defaultValue="basic" value={activeTab} onValueChange={setActiveTab} className="space-y-6">
             <TabsList className="grid w-full grid-cols-3 bg-white p-1 rounded-xl shadow-sm">
               <TabsTrigger value="basic" className="rounded-lg data-[state=active]:bg-orange-500 data-[state=active]:text-white">
                 معلومات أساسية
@@ -349,6 +353,45 @@ export default function CreateStorePage() {
                     )}
                     {errors.slug && (
                       <p className="text-red-500 text-xs mt-1">{errors.slug.message}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <Label htmlFor="businessCategory" className="text-gray-700">
+                      نشاط المتجر <span className="text-red-500">*</span>
+                    </Label>
+                    <div className="mt-2 grid gap-3 sm:grid-cols-2">
+                      {BUSINESS_CATALOG_PRESETS.map((preset) => {
+                        const selected = watch("businessCategory") === preset.id;
+                        return (
+                          <button
+                            key={preset.id}
+                            type="button"
+                            onClick={() => setValue("businessCategory", preset.id)}
+                            className={`rounded-2xl border p-4 text-right transition hover:border-orange-300 hover:bg-orange-50 ${
+                              selected
+                                ? "border-orange-500 bg-orange-50 shadow-sm ring-2 ring-orange-100"
+                                : "border-gray-200 bg-white"
+                            }`}
+                          >
+                            <div className="flex items-start gap-3">
+                              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-orange-100 text-orange-600">
+                                <Tags className="h-5 w-5" />
+                              </span>
+                              <span>
+                                <span className="block font-bold text-gray-900">{preset.labelAr}</span>
+                                <span className="mt-1 block text-xs leading-5 text-gray-500">{preset.descriptionAr}</span>
+                              </span>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <p className="mt-2 rounded-xl border border-emerald-100 bg-emerald-50 px-3 py-2 text-xs font-semibold leading-6 text-emerald-800">
+                      عند إنشاء المتجر سيتم إضافة 15 فئة رئيسية مع فئات فرعية و15 ماركة تلقائيًا حسب النشاط المختار.
+                    </p>
+                    {errors.businessCategory && (
+                      <p className="text-red-500 text-xs mt-1">{errors.businessCategory.message}</p>
                     )}
                   </div>
 

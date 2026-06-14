@@ -7,7 +7,6 @@ import type { StorePublicTheme } from "@/lib/store/store-theme";
 import { getStoreDisplayName } from "@/lib/store/store-theme";
 import { CustomerNav } from "@/components/store-front/customer-nav";
 import { CartDropdown } from "@/components/store-front/cart-dropdown";
-import { PWAInstallPrompt } from "@/components/pwa-install-prompt";
 
 export function StoreHeader({ theme }: { theme: StorePublicTheme }) {
   const isAr = theme.language === "ar";
@@ -56,8 +55,7 @@ export function StoreHeader({ theme }: { theme: StorePublicTheme }) {
           </span>
         </Link>
 
-        <div className="flex items-center justify-end gap-2">
-          <PWAInstallPrompt />
+        <div className="flex items-center justify-end gap-1">
           <Link
             href={`/${theme.slug}/search`}
             className="grid h-10 w-10 place-items-center rounded-full text-slate-700 transition hover:bg-slate-100 hover:text-[var(--store-primary)]"

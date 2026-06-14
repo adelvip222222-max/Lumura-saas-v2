@@ -14,8 +14,8 @@ import { FormField } from "@/components/admin/form-field";
 import { PageHeader } from "@/components/admin/page-header";
 import { createProductSchema, type CreateProductInput } from "@/schemas/product";
 import { createProductAction } from "@/actions/products";
-import { getCategoriesAction } from "@/actions/categories";
-import { getBrandsAction } from "@/actions/brands";
+import { getStoreCategoriesAction } from "@/actions/categories";
+import { getStoreBrandsAction } from "@/actions/brands";
 import { useTranslation } from "@/hooks/use-translation";
 import { cn } from "@/lib/utils";
 import type { ICategory } from "@/lib/db/models/Category";
@@ -105,10 +105,10 @@ export default function NewProductPage() {
   );
 
   useEffect(() => {
-    getCategoriesAction(false).then((r) => {
+    getStoreCategoriesAction(storeSlug, false).then((r) => {
       if (r.success && r.data) setCategories(r.data as ICategory[]);
     });
-    getBrandsAction(false).then((r) => {
+    getStoreBrandsAction(storeSlug, false).then((r) => {
       if (r.success && r.data) setBrands(r.data as IBrand[]);
     });
   }, []);
@@ -338,7 +338,7 @@ export default function NewProductPage() {
                       className={textareaClass}
                     />
                   </FormField>
-                  <FormField label={t("shortDescriptionAr")} error={errors.shortDescriptionAr?.message}>
+                  <FormField label={t("shortDescriptionAr")} error={undefined}>
                     <textarea
                       {...register("shortDescriptionAr" as keyof CreateProductInput)}
                       rows={2}

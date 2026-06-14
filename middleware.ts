@@ -1,5 +1,5 @@
-import NextAuth from "next-auth";
-import { authConfig } from "@/lib/auth.config";
+// src/middleware.ts
+import { auth } from "@/lib/auth";
 import {
   canAccessStore,
   canAccessStorePath,
@@ -21,6 +21,8 @@ const PUBLIC_PATHS = [
   "/reset-password",
   "/unauthorized",
   "/api/auth",
+  "/manifest.webmanifest",
+  "/site.webmanifest",
 ];
 
 const AUTH_PAGES = [
@@ -63,8 +65,6 @@ function nextWithPath(request: NextRequest, pathname: string) {
     },
   });
 }
-
-const { auth } = NextAuth(authConfig);
 
 export default auth((request) => {
   const authRequest = request as AuthRequest;
@@ -234,5 +234,5 @@ export default auth((request) => {
 });
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|manifest.webmanifest|site.webmanifest|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)"],
 };

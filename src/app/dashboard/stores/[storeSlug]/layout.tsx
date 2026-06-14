@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
-import { AdminSidebar } from "@/components/admin/sidebar";
-import { AdminHeader } from "@/components/admin/admin-header";
+import { StoreDashboardShell } from "@/components/admin/store-dashboard-shell";
 import { SubscriptionGate } from "@/components/admin/subscription-gate";
 import { requireStoreSession } from "@/lib/auth/require-store-access";
 import {
@@ -48,37 +47,25 @@ export default async function AdminLayout({
   }
 
   const subscriptionState = await syncStoreSubscriptionBySlug(storeSlug);
-  const storesForSidebar =
-    session.user.role.startsWith("staff_")
-      ? session.user.stores ?? []
-      : session.user.stores ?? [];
-
-  const isDashboardHome = pathname === storeRootPath || pathname === `${storeRootPath}/`;
+  const storesForSidebar = session.user.stores ?? [];
 
   return (
-    <div className="flex h-screen overflow-hidden bg-white">
-      <div className="bg-white border-l border-gray-200">
-        <AdminSidebar storeSlug={storeSlug} stores={storesForSidebar} />
-      </div>
-
-      <div className="flex flex-1 flex-col overflow-hidden bg-slate-50">
-        <div className="bg-white border-b border-gray-200">
-          <AdminHeader user={session.user} />
-        </div>
-
-        <main className={`flex-1 overflow-y-auto p-6 md:p-8 ${isDashboardHome ? "bg-[#f8fafc]" : "bg-gray-50"}`}>
-          <div className={isDashboardHome ? "" : "bg-white rounded-xl shadow-sm border border-gray-100 p-6"}>
-            <SubscriptionGate
-              storeSlug={storeSlug}
-              storeName={store.name}
-              isExpired={subscriptionState?.isExpired ?? false}
-              endDate={subscriptionState?.endDate.toISOString()}
-            >
-              {children}
-            </SubscriptionGate>
-          </div>
-        </main>
-      </div>
-    </div>
+    <StoreDashboardShell
+      user={session.user}
+      storeSlug={storeSlug}
+      stores={storesForSidebar}
+      userRole={userRole}
+      permissions={permissions}
+      isManager={isManager}
+    >
+      <SubscriptionGate
+        storeSlug={storeSlug}
+        storeName={store.name}
+        isExpired={subscriptionState?.isExpired ?? false}
+        endDate={subscriptionState?.endDate.toISOString()}
+      >
+        {children}
+      </SubscriptionGate>
+    </StoreDashboardShell>
   );
 }

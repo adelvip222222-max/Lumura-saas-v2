@@ -46,7 +46,7 @@ export default async function StoreOrderDetailPage({ params, searchParams }: Pro
   const isCancellable = ["pending", "confirmed"].includes(order.status);
 
   return (
-    <div className="container mx-auto px-4 py-8 space-y-6 max-w-7xl">
+    <div className="container py-8 space-y-6">
       {/* Success banner */}
       {sp.success === "true" && (
         <div className="flex items-center gap-3 rounded-xl bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 p-4">

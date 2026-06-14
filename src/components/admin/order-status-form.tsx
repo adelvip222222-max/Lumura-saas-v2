@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter, useParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,8 +21,6 @@ interface Props {
 
 export function OrderStatusForm({ orderId, currentStatus }: Props) {
   const router = useRouter();
-  const params = useParams<{ storeSlug: string }>();
-  const storeSlug = params.storeSlug || "";
   const [status, setStatus] = useState<OrderStatus>(currentStatus);
   const [trackingNumber, setTrackingNumber] = useState("");
   const [cancelReason, setCancelReason] = useState("");
@@ -36,13 +34,12 @@ export function OrderStatusForm({ orderId, currentStatus }: Props) {
 
     setIsSubmitting(true);
     try {
-      const result = await updateOrderStatusAction(
-        storeSlug,
+      const result = await updateOrderStatusAction({
         orderId,
         status,
-        trackingNumber || undefined,
-        cancelReason || undefined
-      );
+        trackingNumber: trackingNumber || undefined,
+        cancelReason: cancelReason || undefined,
+      });
 
       if (!result.success) {
         toast.error(result.error ?? "Failed to update status");

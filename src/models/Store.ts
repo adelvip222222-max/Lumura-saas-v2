@@ -5,6 +5,7 @@ export interface IStore extends Document {
   _id: mongoose.Types.ObjectId;
   tenantId: mongoose.Types.ObjectId;
   slug: string;
+  businessCategory?: string;
   
   // معلومات أساسية (لغة واحدة)
   name: string;                    // اسم المتجر
@@ -91,6 +92,12 @@ const StoreSchema = new Schema<IStore>(
       minlength: [3, "رابط المتجر يجب أن يكون على الأقل 3 أحرف"],
       maxlength: [50, "رابط المتجر لا يمكن أن يتجاوز 50 حرف"],
       match: [/^[a-z0-9-]+$/, "رابط المتجر يمكن أن يحتوي فقط على أحرف صغيرة وأرقام وشرطات"],
+    },
+    businessCategory: {
+      type: String,
+      default: "electronics",
+      enum: ["electronics", "fashion", "beauty", "grocery", "home", "sports"],
+      index: true,
     },
     name: {
       type: String,

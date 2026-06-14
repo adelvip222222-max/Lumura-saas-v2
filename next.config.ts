@@ -2,11 +2,11 @@ import type { NextConfig } from "next";
 
 const contentSecurityPolicy = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://chatzi.io",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https://res.cloudinary.com https://images.unsplash.com https://picsum.photos https://via.placeholder.com",
   "font-src 'self' data:",
-  "connect-src 'self' https://api.stripe.com https://res.cloudinary.com https://chatzi.io wss://chatzi.io",
+  "connect-src 'self' https://api.stripe.com https://res.cloudinary.com",
   "frame-src https://js.stripe.com https://hooks.stripe.com",
   "object-src 'none'",
   "base-uri 'self'",
@@ -16,7 +16,6 @@ const contentSecurityPolicy = [
 ].join("; ");
 
 const nextConfig: NextConfig = {
-  crossOrigin: "use-credentials",
   eslint: {
     ignoreDuringBuilds: true,
   },

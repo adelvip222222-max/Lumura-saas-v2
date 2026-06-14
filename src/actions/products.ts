@@ -4,7 +4,6 @@ import { connectToDatabase } from "@/lib/db/mongodb";
 import Product from "@/models/Product";
 import AuditLog from "@/models/AuditLog";
 import { auth } from "@/lib/auth";
-import { notifyTenantUsers } from "@/actions/notifications";
 import {
   createProductSchema,
   updateProductSchema,
@@ -346,7 +345,7 @@ export async function createProductAction(
           : 0,
     });
 
-    const promises: any[] = [
+    await Promise.all([
       Store.findByIdAndUpdate(store._id, {
         $inc: { "statistics.totalProducts": 1 },
       }),
@@ -360,34 +359,7 @@ export async function createProductAction(
         details: { name: product.name, sku: product.sku, storeSlug: store.slug },
         success: true,
       }),
-      notifyTenantUsers({
-        tenantId: store.tenantId.toString(),
-        storeId: store._id.toString(),
-        type: "product_created",
-        title: "New Product Created",
-        titleAr: "تم إضافة منتج جديد",
-        message: `Product "${product.name}" has been created in store "${store.name}".`,
-        messageAr: `تم إضافة منتج جديد باسم "${product.name}" في متجر "${store.name}".`,
-        link: `/dashboard/stores/${store.slug}/products/${product.slug}/edit`,
-      })
-    ];
-
-    if (data.discountPrice && data.discountPrice > 0) {
-      promises.push(
-        notifyTenantUsers({
-          tenantId: store.tenantId.toString(),
-          storeId: store._id.toString(),
-          type: "offer_created" as any,
-          title: "New Offer/Discount Added",
-          titleAr: "تم إضافة عرض جديد",
-          message: `An offer has been added for product "${product.name}" with discount price ${data.discountPrice}.`,
-          messageAr: `تم إضافة عرض جديد على منتج "${product.name}" بسعر خصم ${data.discountPrice}.`,
-          link: `/dashboard/stores/${store.slug}/products/${product.slug}/edit`,
-        })
-      );
-    }
-
-    await Promise.all(promises);
+    ]);
 
     return {
       success: true,
@@ -433,8 +405,7 @@ export async function updateProductAction(rawData: unknown): Promise<ApiResponse
   try {
     await connectToDatabase();
 
-    const product = await Product.findById(id);
-    if (!product) {
+    if (!await Product.findById(id)) {
       return { success: false, error: "Product not found" };
     }
 
@@ -447,14 +418,9 @@ export async function updateProductAction(rawData: unknown): Promise<ApiResponse
           updateData.sellingPrice) * 100;
     }
 
-    const isNewOffer = 
-      updateData.discountPrice !== undefined && 
-      updateData.discountPrice > 0 && 
-      updateData.discountPrice !== product.discountPrice;
-
     await Product.findByIdAndUpdate(id, updateData, { runValidators: true });
 
-    const auditPromise = AuditLog.create({
+    await AuditLog.create({
       userId:    session.user.id,
       userEmail: session.user.email,
       userRole:  session.user.role,
@@ -463,25 +429,6 @@ export async function updateProductAction(rawData: unknown): Promise<ApiResponse
       resourceId: id,
       success:   true,
     });
-
-    let notificationPromise = Promise.resolve();
-    if (isNewOffer) {
-      const store = await Store.findById(product.storeId);
-      if (store) {
-        notificationPromise = notifyTenantUsers({
-          tenantId: product.tenantId.toString(),
-          storeId: product.storeId.toString(),
-          type: "offer_created" as any,
-          title: "New Offer/Discount Added",
-          titleAr: "تم إضافة عرض جديد",
-          message: `An offer has been added for product "${product.name}" with discount price ${updateData.discountPrice}.`,
-          messageAr: `تم إضافة عرض جديد على منتج "${product.name}" بسعر خصم ${updateData.discountPrice}.`,
-          link: `/dashboard/stores/${store.slug}/products/${product.slug}/edit`,
-        });
-      }
-    }
-
-    await Promise.all([auditPromise, notificationPromise]);
 
     return { success: true, message: "Product updated successfully" };
   } catch (error) {

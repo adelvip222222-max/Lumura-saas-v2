@@ -11,6 +11,8 @@ import type { IStore } from "@/models/Store";
 import { ensureDefaultPlans, createStoreSubscription } from "@/services/subscription.service";
 import { cleanupStoreMediaOnUpdate } from "@/lib/store/store-media";
 import { getThemeById, getDefaultTheme } from "@/config/store-themes";
+import { DEFAULT_BUSINESS_PRESET_ID, type BusinessPresetId } from "@/config/business-catalog-presets";
+import { seedDefaultCatalogForStore } from "@/lib/store/default-catalog";
 
 // ✅ تسجيل النماذج
 import "@/models/Tenant";
@@ -113,7 +115,8 @@ export async function createStoreAction(rawData: {
   iconStyle?: "outline" | "solid" | "duotone";
   fontFamily?: "system" | "cairo" | "tajawal" | "inter";
   cornerRadius?: "sharp" | "soft" | "rounded";
-}): Promise<ApiResponse<{ storeId: string; slug: string }>> {
+  businessCategory?: BusinessPresetId;
+}): Promise<ApiResponse<{ storeId: string; slug: string; seededCatalog?: { presetId: string; categoriesInserted: number; brandsInserted: number } }>> {
   const session = await auth();
   if (!session?.user) {
     return { success: false, error: "يجب تسجيل الدخول أولاً" };
@@ -150,6 +153,7 @@ export async function createStoreAction(rawData: {
     const store = await Store.create({
       tenantId: session.user.tenantId,
       slug: rawData.slug,
+      businessCategory: rawData.businessCategory ?? DEFAULT_BUSINESS_PRESET_ID,
       name: rawData.name,
       nameEn: rawData.name,
       description: rawData.description,
@@ -190,10 +194,16 @@ export async function createStoreAction(rawData: {
       isActive: true,
     });
 
+    const seededCatalog = await seedDefaultCatalogForStore({
+      tenantId: store.tenantId,
+      storeId: store._id,
+      businessCategory: rawData.businessCategory,
+    });
+
     return {
       success: true,
-      data: { storeId: store._id.toString(), slug: store.slug },
-      message: "تم إنشاء المتجر بنجاح",
+      data: { storeId: store._id.toString(), slug: store.slug, seededCatalog },
+      message: `تم إنشاء المتجر بنجاح وإضافة ${seededCatalog.categoriesInserted} فئة و ${seededCatalog.brandsInserted} ماركة تلقائيًا`,
     };
   } catch (error) {
     console.error("Create store error:", error);

@@ -506,19 +506,26 @@ export async function createOrderAction(formData: any) {
       total: total,
       paymentMethod: formData.paymentMethod,
       paymentStatus: "pending",
+      status: "pending",
       notes: formData.notes || "",
     });
 
-    // Notify tenant/store users about the new order
     await notifyTenantUsers({
       tenantId: store.tenantId.toString(),
       storeId: store._id.toString(),
       type: "new_order",
-      title: "New Order Placed",
-      titleAr: "طلب جديد",
-      message: `A new order #${order.orderNumber} has been placed.`,
-      messageAr: `تم تقديم طلب جديد رقم #${order.orderNumber}.`,
-      link: `/dashboard/stores/${formData.storeSlug}/orders/${order._id.toString()}`,
+      title: "New order received",
+      titleAr: "طلب جديد في المتجر",
+      message: `A new order ${order.orderNumber} has been placed with total ${total}`,
+      messageAr: `تم إنشاء طلب جديد رقم ${order.orderNumber} بإجمالي ${total}`,
+      link: `/dashboard/stores/${store.slug}/orders`,
+      includeStaffRoles: ["staff_orders"],
+      metadata: {
+        orderId: order._id.toString(),
+        orderNumber: order.orderNumber,
+        storeSlug: store.slug,
+        total,
+      },
     });
 
     // ✅ تحديث مخزون المنتجات
@@ -623,9 +630,7 @@ export async function createOrderAction(formData: any) {
 export async function updateOrderStatusAction(
   storeSlug: string,  // ✅ المعامل الأول: storeSlug
   orderId: string,    // ✅ المعامل الثاني: orderId
-  newStatus: string,  // ✅ المعامل الثالث: newStatus
-  trackingNumber?: string,
-  cancelReason?: string
+  newStatus: string   // ✅ المعامل الثالث: newStatus
 ) {
   try {
     await connectToDatabase();
@@ -651,7 +656,7 @@ export async function updateOrderStatusAction(
       return { success: false, error: "المتجر غير موجود" };
     }
 
-    const validStatuses = ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded'];
+    const validStatuses = ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'];
     if (!validStatuses.includes(newStatus)) {
       return { success: false, error: "حالة الطلب غير صالحة" };
     }
@@ -663,9 +668,8 @@ export async function updateOrderStatusAction(
       },
       { 
         status: newStatus,
-        ...(newStatus === 'delivered' ? { paymentStatus: 'paid', deliveredAt: new Date() } : {}),
-        ...(newStatus === 'cancelled' ? { paymentStatus: 'cancelled', cancelledAt: new Date(), cancelReason } : {}),
-        ...(newStatus === 'shipped' && trackingNumber ? { trackingNumber } : {}),
+        ...(newStatus === 'delivered' ? { paymentStatus: 'paid' } : {}),
+        ...(newStatus === 'cancelled' ? { paymentStatus: 'cancelled' } : {}),
       },
       { new: true }
     );
@@ -674,33 +678,12 @@ export async function updateOrderStatusAction(
       return { success: false, error: "الطلب غير موجود" };
     }
 
-    const statusLabels: Record<string, string> = {
-      pending: 'قيد الانتظار',
-      confirmed: 'مؤكد',
-      processing: 'قيد التجهيز',
-      shipped: 'تم الشحن',
-      delivered: 'تم التوصيل',
-      cancelled: 'ملغي',
-      refunded: 'مسترجع',
-    };
-
-    await notifyTenantUsers({
-      tenantId: order.tenantId.toString(),
-      storeId: order.storeId.toString(),
-      type: "order_status_updated",
-      title: "Order Status Updated",
-      titleAr: "تم تحديث حالة الطلب",
-      message: `Order #${order.orderNumber} status changed to "${newStatus}".`,
-      messageAr: `تم تغيير حالة الطلب رقم #${order.orderNumber} إلى "${statusLabels[newStatus] || newStatus}".`,
-      link: `/dashboard/stores/${storeSlug}/orders/${order._id.toString()}`,
-    });
-
     revalidatePath(`/dashboard/stores/${storeSlug}/orders`);
     revalidatePath(`/dashboard/stores/${storeSlug}/orders/${orderId}`);
 
     return { 
       success: true, 
-      message: `تم تحديث حالة الطلب إلى "${statusLabels[newStatus] || newStatus}"`,
+      message: `تم تحديث حالة الطلب إلى "${newStatus}"`,
       data: { status: newStatus }
     };
   } catch (error) {

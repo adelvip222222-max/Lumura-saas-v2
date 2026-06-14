@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
@@ -12,7 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FormField } from "@/components/admin/form-field";
 import { PageHeader } from "@/components/admin/page-header";
 import { createBrandSchema, type CreateBrandInput } from "@/schemas/brand";
-import { createBrandAction } from "@/actions/brands";
+import { createStoreBrandAction } from "@/actions/brands";
 import { useTranslation } from "@/hooks/use-translation";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
@@ -23,6 +23,8 @@ function toSlug(s: string) {
 
 export default function NewBrandPage() {
   const router = useRouter();
+  const params = useParams<{ storeSlug: string }>();
+  const storeSlug = params.storeSlug || "";
   const { t, locale } = useTranslation();
   const isAr = locale === "ar";
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -43,13 +45,13 @@ export default function NewBrandPage() {
   const onSubmit = async (data: CreateBrandInput) => {
     setIsSubmitting(true);
     try {
-      const result = await createBrandAction(data);
+      const result = await createStoreBrandAction(storeSlug, data);
       if (!result.success) {
         toast.error(result.error ?? (isAr ? "فشل الإنشاء" : "Failed to create"));
         return;
       }
       toast.success(t("brandCreated"));
-      router.push("/admin/brands");
+      router.push(`/dashboard/stores/${storeSlug}/brands`);
     } catch {
       toast.error(isAr ? "حدث خطأ ما" : "Something went wrong");
     } finally {
@@ -64,7 +66,7 @@ export default function NewBrandPage() {
         description={isAr ? "أنشئ ماركة منتجات جديدة" : "Create a new product brand"}
       >
         <Button >
-          <Link href="/admin/brands">
+          <Link href={`/dashboard/stores/${storeSlug}/brands`}>
             <ArrowLeft className={cn("h-4 w-4", isAr && "rotate-180")} />
             {t("back")}
           </Link>

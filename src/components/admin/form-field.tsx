@@ -8,6 +8,7 @@ interface FormFieldProps {
   hint?: string;
   children: ReactNode;
   className?: string;
+  htmlFor?: string;
 }
 
 export function FormField({
@@ -17,10 +18,11 @@ export function FormField({
   hint,
   children,
   className,
+  htmlFor,
 }: FormFieldProps) {
   return (
     <div className={cn("space-y-1.5", className)}>
-      <label className="text-sm font-medium leading-none">
+      <label htmlFor={htmlFor} className="text-sm font-medium leading-none">
         {label}
         {required && <span className="ml-1 text-destructive">*</span>}
       </label>

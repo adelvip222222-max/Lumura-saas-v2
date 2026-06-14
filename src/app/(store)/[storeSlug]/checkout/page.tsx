@@ -106,7 +106,7 @@ const onSubmit = async (data: CreateOrderInput) => {
   if (items.length === 0) { router.push(`${base}/cart`); return null; }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-7xl">
+    <div className="container py-8">
       <h1 className="text-3xl font-bold mb-8">Checkout</h1>
       <form onSubmit={handleSubmit(onSubmit)}>
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">

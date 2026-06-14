@@ -110,7 +110,8 @@ export async function updateAdministrationOrderAction(formData: FormData) {
     message: `Order ${order.orderNumber} is now ${status}`,
     messageAr: `تم تغيير حالة الطلب ${order.orderNumber} إلى ${status}`,
     link: `/ad-i-orders`,
-    metadata: { orderId: order._id.toString(), orderNumber: order.orderNumber, status },
+    includeStaffRoles: ["staff_orders"],
+    metadata: { orderId: order._id.toString(), orderNumber: order.orderNumber, status, storeSlug: ctx.storeSlug },
   });
 
   revalidatePath("/ad-i-orders");

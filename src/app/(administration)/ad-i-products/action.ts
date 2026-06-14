@@ -262,7 +262,8 @@ export async function createAdministrationProductAction(formData: FormData) {
     message: `${ctx.userName} added ${product.name}`,
     messageAr: `قام ${ctx.userName} بإضافة المنتج ${product.name}`,
     link: "/ad-i-products",
-    metadata: { productId: product._id.toString(), sku: product.sku },
+    includeStaffRoles: ["staff_products"],
+    metadata: { productId: product._id.toString(), sku: product.sku, storeSlug: ctx.storeSlug },
   });
 
   revalidatePath("/ad-i-products");
@@ -317,7 +318,8 @@ export async function updateAdministrationProductAction(formData: FormData) {
     message: `${ctx.userName} updated ${product.name}`,
     messageAr: `قام ${ctx.userName} بتعديل المنتج ${product.name}`,
     link: "/ad-i-products",
-    metadata: { productId: product._id.toString(), sku: product.sku },
+    includeStaffRoles: ["staff_products"],
+    metadata: { productId: product._id.toString(), sku: product.sku, storeSlug: ctx.storeSlug },
   });
 
   revalidatePath("/ad-i-products");
@@ -349,7 +351,8 @@ export async function deleteAdministrationProductAction(formData: FormData) {
     message: `${ctx.userName} deleted ${product.name}`,
     messageAr: `قام ${ctx.userName} بحذف المنتج ${product.name}`,
     link: "/ad-i-products",
-    metadata: { productId: product._id.toString(), sku: product.sku },
+    includeStaffRoles: ["staff_products"],
+    metadata: { productId: product._id.toString(), sku: product.sku, storeSlug: ctx.storeSlug },
   });
 
   revalidatePath("/ad-i-products");

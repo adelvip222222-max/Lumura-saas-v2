@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { Bell, Check, CheckCheck, Trash2, X } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -34,32 +35,140 @@ const TYPE_ICONS: Record<string, string> = {
   product_deleted: "-",
 };
 
+type NotificationsPayload = {
+  notifications: INotification[];
+  unreadCount: number;
+};
+
+function notificationId(notification: INotification) {
+  return notification._id.toString();
+}
+
+function playNotificationSound() {
+  try {
+    const AudioContextClass = window.AudioContext ||
+      (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+
+    if (!AudioContextClass) return;
+
+    const audioContext = new AudioContextClass();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+
+    oscillator.type = "sine";
+    oscillator.frequency.setValueAtTime(880, audioContext.currentTime);
+    oscillator.frequency.setValueAtTime(660, audioContext.currentTime + 0.12);
+    gainNode.gain.setValueAtTime(0.0001, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.18, audioContext.currentTime + 0.02);
+    gainNode.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + 0.35);
+
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + 0.36);
+  } catch {
+    // بعض المتصفحات تمنع الصوت قبل أول تفاعل من المستخدم. التوست سيظل ظاهرًا.
+  }
+}
+
 export function NotificationsBell() {
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState<INotification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isPending, startTransition] = useTransition();
+  const bootstrappedRef = useRef(false);
+  const knownIdsRef = useRef<Set<string>>(new Set());
+  const pollingFallbackRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const fetchNotifications = () => {
+  const announce = useCallback((freshNotifications: INotification[]) => {
+    if (freshNotifications.length === 0) return;
+
+    playNotificationSound();
+
+    const first = freshNotifications[0];
+    toast(first.titleAr || first.title, {
+      description: first.messageAr || first.message,
+      action: first.link
+        ? {
+            label: "فتح",
+            onClick: () => {
+              window.location.href = first.link as string;
+            },
+          }
+        : undefined,
+    });
+  }, []);
+
+  const applyPayload = useCallback(
+    (payload: NotificationsPayload) => {
+      const incoming = payload.notifications ?? [];
+      const fresh = bootstrappedRef.current
+        ? incoming.filter((item) => !item.isRead && !knownIdsRef.current.has(notificationId(item)))
+        : [];
+
+      setNotifications(incoming);
+      setUnreadCount(payload.unreadCount ?? 0);
+
+      const nextKnownIds = new Set(knownIdsRef.current);
+      incoming.forEach((item) => nextKnownIds.add(notificationId(item)));
+      knownIdsRef.current = nextKnownIds;
+      bootstrappedRef.current = true;
+
+      announce(fresh);
+    },
+    [announce]
+  );
+
+  const fetchNotifications = useCallback(() => {
     startTransition(async () => {
       const result = await getNotificationsAction(20);
       if (result.success && result.data) {
-        setNotifications(result.data.notifications);
-        setUnreadCount(result.data.unreadCount);
+        applyPayload(result.data);
       }
     });
-  };
+  }, [applyPayload]);
 
   useEffect(() => {
     fetchNotifications();
-    const interval = setInterval(fetchNotifications, 5_000);
-    return () => clearInterval(interval);
-  }, []);
+
+    const startPollingFallback = () => {
+      if (pollingFallbackRef.current) return;
+      pollingFallbackRef.current = setInterval(fetchNotifications, 15_000);
+    };
+
+    let stream: EventSource | null = null;
+
+    try {
+      stream = new EventSource("/api/notifications/stream");
+      stream.onmessage = (event) => {
+        try {
+          applyPayload(JSON.parse(event.data) as NotificationsPayload);
+        } catch {
+          startPollingFallback();
+        }
+      };
+      stream.onerror = () => {
+        stream?.close();
+        stream = null;
+        startPollingFallback();
+      };
+    } catch {
+      startPollingFallback();
+    }
+
+    return () => {
+      stream?.close();
+      if (pollingFallbackRef.current) {
+        clearInterval(pollingFallbackRef.current);
+        pollingFallbackRef.current = null;
+      }
+    };
+  }, [applyPayload, fetchNotifications]);
 
   const handleMarkRead = async (id: string) => {
     await markNotificationReadAction(id);
     setNotifications((prev) =>
-      prev.map((n) => (n._id.toString() === id ? { ...n, isRead: true } : n))
+      prev.map((n) => (notificationId(n) === id ? { ...n, isRead: true } : n))
     );
     setUnreadCount((prev) => Math.max(0, prev - 1));
   };
@@ -71,9 +180,9 @@ export function NotificationsBell() {
   };
 
   const handleDelete = async (id: string) => {
-    const notif = notifications.find((n) => n._id.toString() === id);
+    const notif = notifications.find((n) => notificationId(n) === id);
     await deleteNotificationAction(id);
-    setNotifications((prev) => prev.filter((n) => n._id.toString() !== id));
+    setNotifications((prev) => prev.filter((n) => notificationId(n) !== id));
     if (notif && !notif.isRead) setUnreadCount((prev) => Math.max(0, prev - 1));
   };
 
@@ -84,7 +193,7 @@ export function NotificationsBell() {
         size="sm"
         onClick={() => setOpen(!open)}
         aria-label={`Notifications (${unreadCount} unread)`}
-        className="relative h-10 w-10 rounded-full p-0"
+        className="relative h-10 w-10 rounded-full p-0 text-gray-600 hover:bg-gray-100"
         disabled={isPending && notifications.length === 0}
       >
         <Bell className="h-5 w-5" />
@@ -99,7 +208,7 @@ export function NotificationsBell() {
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
 
-          <div className="absolute left-0 top-12 z-50 w-80 overflow-hidden rounded-xl border bg-white shadow-lg">
+          <div className="absolute left-0 top-12 z-50 w-[calc(100vw-2rem)] max-w-sm overflow-hidden rounded-xl border bg-white shadow-lg sm:w-80">
             <div className="flex items-center justify-between border-b px-4 py-3">
               <h3 className="text-sm font-semibold">الإشعارات</h3>
               <div className="flex items-center gap-2">
@@ -126,6 +235,7 @@ export function NotificationsBell() {
                 </div>
               ) : (
                 notifications.map((notif) => {
+                  const id = notificationId(notif);
                   const content = (
                     <div
                       className={cn(
@@ -151,12 +261,12 @@ export function NotificationsBell() {
                   );
 
                   return (
-                    <div key={notif._id.toString()} className="relative">
+                    <div key={id} className="relative">
                       {notif.link ? (
                         <Link
                           href={notif.link}
                           onClick={() => {
-                            handleMarkRead(notif._id.toString());
+                            handleMarkRead(id);
                             setOpen(false);
                           }}
                         >
@@ -168,7 +278,7 @@ export function NotificationsBell() {
                       <div className="absolute left-2 top-3 flex gap-1">
                         {!notif.isRead && (
                           <button
-                            onClick={() => handleMarkRead(notif._id.toString())}
+                            onClick={() => handleMarkRead(id)}
                             className="text-gray-400 hover:text-orange-600"
                             title="تعليم كمقروء"
                           >
@@ -176,7 +286,7 @@ export function NotificationsBell() {
                           </button>
                         )}
                         <button
-                          onClick={() => handleDelete(notif._id.toString())}
+                          onClick={() => handleDelete(id)}
                           className="text-gray-400 hover:text-red-600"
                           title="حذف"
                         >

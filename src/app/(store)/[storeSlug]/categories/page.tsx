@@ -35,15 +35,15 @@ export default async function StoreCategoriesPage({ params }: Props) {
   const rest     = categories.filter((c) => !c.isFeatured);
 
   return (
-    <div className="container mx-auto px-4 py-10 space-y-12 max-w-7xl">
+    <div className="container py-10 space-y-12">
       {/* Header */}
-      <div className="text-center flex flex-col items-center justify-center">
-        <nav className="flex items-center justify-center gap-1.5 text-sm text-muted-foreground mb-4">
+      <div>
+        <nav className="flex items-center gap-1.5 text-sm text-muted-foreground mb-4">
           <Link href={base} className="hover:text-foreground">Home</Link>
           <ChevronRight className="h-3.5 w-3.5" />
           <span className="text-foreground font-medium">Categories</span>
         </nav>
-        <h1 className="text-3xl font-bold tracking-tight">All Categories</h1>
+        <h1 className="text-3xl font-bold">All Categories</h1>
         <p className="text-muted-foreground mt-1">Browse products by category</p>
       </div>
 

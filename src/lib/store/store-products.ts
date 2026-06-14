@@ -17,8 +17,6 @@ export async function getStoreProducts(
     search?: string;
     page?: number;
     limit?: number;
-    sortBy?: string;
-    onlyOffers?: boolean;
   }
 ) {
   await connectToDatabase();
@@ -38,10 +36,6 @@ export async function getStoreProducts(
 
   if (filters?.brand) {
     query.brand = new mongoose.Types.ObjectId(filters.brand);
-  }
-
-  if (filters?.onlyOffers) {
-    query.discountPrice = { $exists: true, $gt: 0 };
   }
 
   if (filters?.subcategory) {
@@ -70,23 +64,10 @@ export async function getStoreProducts(
   const page = filters?.page || 1;
   const limit = filters?.limit || 20;
   const skip = (page - 1) * limit;
-
-  let sortOption: any = { createdAt: -1 };
-  if (filters?.sortBy) {
-    if (filters.sortBy === 'price-asc') {
-      sortOption = { sellingPrice: 1 };
-    } else if (filters.sortBy === 'price-desc') {
-      sortOption = { sellingPrice: -1 };
-    } else if (filters.sortBy === 'oldest') {
-      sortOption = { createdAt: 1 };
-    } else if (filters.sortBy === 'popular') {
-      sortOption = { soldQuantity: -1 };
-    }
-  }
   
   const [products, total] = await Promise.all([
     Product.find(query)
-      .sort(sortOption)
+      .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
       .populate('category', 'name slug')

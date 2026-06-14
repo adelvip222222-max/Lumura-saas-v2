@@ -52,7 +52,7 @@ export function NotificationsBell() {
 
   useEffect(() => {
     fetchNotifications();
-    const interval = setInterval(fetchNotifications, 60_000);
+    const interval = setInterval(fetchNotifications, 5_000);
     return () => clearInterval(interval);
   }, []);
 

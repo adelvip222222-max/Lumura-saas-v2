@@ -7,6 +7,7 @@ import Store from "@/models/Store";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import mongoose from "mongoose";
+import { notifyTenantUsers } from "@/actions/notifications";
 
 /**
  * ✅ تحديث حالة الطلب - Server Action
@@ -212,6 +213,17 @@ export async function updateOrderStatus(
       delivered: 'تم التوصيل',
       cancelled: 'ملغي',
     };
+
+    await notifyTenantUsers({
+      tenantId: order.tenantId.toString(),
+      storeId: order.storeId.toString(),
+      type: "order_status_updated",
+      title: "Order Status Updated",
+      titleAr: "تم تحديث حالة الطلب",
+      message: `Order #${order.orderNumber} status changed to "${status}".`,
+      messageAr: `تم تغيير حالة الطلب رقم #${order.orderNumber} إلى "${statusLabels[status] || status}".`,
+      link: `/dashboard/stores/${storeSlug}/orders/${order._id.toString()}`,
+    });
 
     return { 
       success: true, 

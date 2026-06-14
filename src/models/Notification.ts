@@ -18,7 +18,9 @@ export type NotificationType =
   | "product_created"
   | "product_review_required"
   | "product_updated"
-  | "product_deleted";
+  | "product_deleted"
+  | "category_created"
+  | "offer_created";
 
 export interface INotification extends Document {
   _id: mongoose.Types.ObjectId;

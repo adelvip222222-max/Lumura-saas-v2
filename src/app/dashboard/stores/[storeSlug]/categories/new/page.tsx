@@ -53,7 +53,7 @@ export default function NewCategoryPage() {
   const onSubmit = async (data: CreateCategoryInput) => {
     setIsSubmitting(true);
     try {
-      const result = await createCategoryAction(data);
+      const result = await createCategoryAction(data, storeSlug);
       if (!result.success) {
         toast.error(result.error ?? (isAr ? "فشل الإنشاء" : "Failed to create"));
         return;

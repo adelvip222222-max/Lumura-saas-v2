@@ -8,6 +8,9 @@ import { createCategorySchema, updateCategorySchema } from "@/schemas/category";
 import { serialize } from "@/lib/serialize";
 import type { ApiResponse } from "@/types";
 import type { ICategory } from "@/models/Category";
+import Store from "@/models/Store";
+import { notifyTenantUsers } from "@/actions/notifications";
+import mongoose from "mongoose";
 
 export async function getCategoriesAction(
   activeOnly = true
@@ -48,7 +51,8 @@ export async function getCategoryBySlugAction(
 }
 
 export async function createCategoryAction(
-  rawData: unknown
+  rawData: unknown,
+  storeSlug?: string
 ): Promise<ApiResponse<{ id: string }>> {
   const session = await auth();
   if (!session?.user || !["tenant_admin", "super_admin", "staff_products"].includes(session.user.role)) {
@@ -68,7 +72,19 @@ export async function createCategoryAction(
   try {
     await connectToDatabase();
 
+    let store;
+    if (storeSlug) {
+      store = await Store.findOne({ slug: storeSlug });
+    } else if (session.user.storeId) {
+      store = await Store.findById(session.user.storeId);
+    }
+
+    if (!store) {
+      return { success: false, error: "Store not found" };
+    }
+
     const existing = await Category.findOne({
+      storeId: store._id,
       $or: [{ name: parsed.data.name }, { slug: parsed.data.slug }],
     });
 
@@ -76,18 +92,34 @@ export async function createCategoryAction(
       return { success: false, error: "Category with this name or slug already exists" };
     }
 
-    const category = await Category.create(parsed.data);
-
-    await AuditLog.create({
-      userId: session.user.id,
-      userEmail: session.user.email,
-      userRole: session.user.role,
-      action: "CREATE",
-      resource: "Category",
-      resourceId: category._id.toString(),
-      details: { name: category.name },
-      success: true,
+    const category = await Category.create({
+      ...parsed.data,
+      tenantId: store.tenantId,
+      storeId: store._id,
     });
+
+    await Promise.all([
+      AuditLog.create({
+        userId: session.user.id,
+        userEmail: session.user.email,
+        userRole: session.user.role,
+        action: "CREATE",
+        resource: "Category",
+        resourceId: category._id.toString(),
+        details: { name: category.name },
+        success: true,
+      }),
+      notifyTenantUsers({
+        tenantId: store.tenantId.toString(),
+        storeId: store._id.toString(),
+        type: "category_created" as any,
+        title: "New Category Created",
+        titleAr: "تم إضافة فئة جديدة",
+        message: `Category "${category.name}" has been created in store "${store.name}".`,
+        messageAr: `تم إضافة فئة جديدة باسم "${category.name}" في متجر "${store.name}".`,
+        link: `/dashboard/stores/${store.slug}/categories`,
+      })
+    ]);
 
     return {
       success: true,

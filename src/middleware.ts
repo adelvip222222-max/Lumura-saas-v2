@@ -26,11 +26,11 @@ export function middleware(request: NextRequest) {
   // CSP header
   const csp = [
     "default-src 'self'",
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://chatzi.io",
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: https:",
     "font-src 'self' data:",
-    "connect-src 'self' https:",
+    "connect-src 'self' https: wss://chatzi.io",
   ].join("; ");
 
   response.headers.set("Content-Security-Policy", csp);

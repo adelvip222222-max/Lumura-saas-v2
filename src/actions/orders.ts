@@ -11,6 +11,7 @@ import { revalidatePath } from "next/cache";
 import mongoose from "mongoose";
 import { siteConfig } from "@/config/site";
 import { notifyTenantUsers } from "@/actions/notifications";
+import { getCustomerFromCookie } from "@/lib/jwt/customer-jwt";
 
 // ✅ التحقق من وجود مفتاح Stripe بشكل آمن
 let stripe: Stripe | null = null;
@@ -419,7 +420,8 @@ export async function createOrderAction(formData: any) {
 
     // ✅ جلسة المستخدم (إذا كان مسجلاً)
     const session = await auth();
-    const userId = session?.user?.id || null;
+    const customer = await getCustomerFromCookie(formData.storeSlug);
+    const userId = customer?.id || session?.user?.id || null;
 
     // ✅ حساب الإجمالي والتحقق من المنتجات
     let calculatedSubtotal = 0;

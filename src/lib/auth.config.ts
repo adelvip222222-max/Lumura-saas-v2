@@ -1,5 +1,6 @@
 import type { NextAuthConfig } from "next-auth";
 import { type TenantRole, type Permission } from "@/lib/auth/permissions";
+import { headers } from "next/headers";
 
 export const authConfig = {
   providers: [], // Will be populated in auth.ts
@@ -39,12 +40,31 @@ export const authConfig = {
       return session;
     },
     async redirect({ url, baseUrl }) {
-      if (url.startsWith(baseUrl)) return url;
+      let currentBaseUrl = baseUrl;
+      try {
+        const headersList = await headers();
+        const host = headersList.get("host");
+        const proto = headersList.get("x-forwarded-proto") || "https";
+        if (host) {
+          currentBaseUrl = `${proto}://${host}`;
+        }
+      } catch {}
+
+      if (url.startsWith("/")) return `${currentBaseUrl}${url}`;
+      
       try {
         const parsed = new URL(url);
-        if (parsed.origin === baseUrl) return url;
+        const parsedBase = new URL(currentBaseUrl);
+        if (
+          parsed.origin === parsedBase.origin || 
+          parsed.hostname.endsWith(".vercel.app") ||
+          parsed.hostname === "localhost"
+        ) {
+          return url;
+        }
       } catch {}
-      return baseUrl;
+      
+      return currentBaseUrl;
     },
   },
   pages: {

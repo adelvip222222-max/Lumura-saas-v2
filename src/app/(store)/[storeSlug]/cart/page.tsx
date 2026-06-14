@@ -74,7 +74,7 @@ export default function StoreCartPage() {
 
   if (isValidating) {
     return (
-      <div className="container py-16 text-center">
+      <div className="container mx-auto px-4 py-16 text-center">
         <RefreshCw className="h-12 w-12 mx-auto text-orange-500 animate-spin mb-4" />
         <p className="text-gray-500">جاري التحقق من المنتجات...</p>
       </div>
@@ -83,7 +83,7 @@ export default function StoreCartPage() {
 
   if (items.length === 0) {
     return (
-      <div className="container py-16 text-center">
+      <div className="container mx-auto px-4 py-16 text-center">
         <ShoppingBag className="h-16 w-16 mx-auto text-gray-300 mb-4" />
         <h1 className="text-2xl font-bold text-gray-900 mb-2">السلة فارغة</h1>
         <p className="text-gray-500 mb-6">أضف بعض المنتجات للبدء</p>
@@ -97,7 +97,7 @@ export default function StoreCartPage() {
   }
 
   return (
-    <div className="container py-8">
+    <div className="container mx-auto px-4 py-8 max-w-7xl">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold text-gray-900">سلة التسوق</h1>
         <Button variant="outline" onClick={handleRefresh} size="sm">

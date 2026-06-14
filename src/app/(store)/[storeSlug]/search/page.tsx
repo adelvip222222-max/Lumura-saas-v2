@@ -89,22 +89,23 @@ export default async function StoreSearchPage({ params, searchParams }: Props) {
   const base  = `/${storeSlug}`;
 
   return (
-    <div className="container py-8 space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold">Search</h1>
-        <p className="text-muted-foreground mt-1">Find products in our store</p>
+    <div className="container mx-auto px-4 py-8 space-y-8 max-w-7xl">
+      <div className="text-center flex flex-col items-center justify-center space-y-2">
+        <h1 className="text-3xl font-bold tracking-tight">Search</h1>
+        <p className="text-muted-foreground">Find products in our store</p>
       </div>
 
       {/* Search form */}
-      <form method="GET" action={`${base}/search`} className="flex gap-3 max-w-xl">
+      <form method="GET" action={`${base}/search`} className="flex gap-3 max-w-xl w-full mx-auto">
         <Input
           name="q"
           defaultValue={query}
           placeholder="Search products..."
           leftIcon={<Search className="h-4 w-4" />}
           autoFocus
+          className="w-full"
         />
-        <Button type="submit">Search</Button>
+        <Button type="submit" className="shrink-0">Search</Button>
       </form>
 
       <Suspense fallback={<ProductGridSkeleton count={12} />}>

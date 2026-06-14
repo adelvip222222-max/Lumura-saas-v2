@@ -6,6 +6,7 @@ import { LocaleProvider } from "@/providers/locale-provider"; // ✅ هذا صح
 import { CartProvider } from "@/providers/cart-provider";
 import { Toaster } from "sonner";
 import { siteConfig } from "@/config/site";
+import { PWARegister } from "@/components/pwa-register";
 import "@/app/globals.css";
 
 const inter = Inter({
@@ -30,6 +31,11 @@ export const metadata: Metadata = {
   keywords: [...siteConfig.keywords],
   authors: [{ name: siteConfig.name }],
   creator: siteConfig.name,
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: siteConfig.name,
+  },
   openGraph: {
     type: "website",
     locale: "ar_EG", // ✅ تغيير إلى العربية
@@ -62,6 +68,7 @@ export default function RootLayout({
       className={`${inter.variable} ${cairo.variable}`}
     >
       <body className="min-h-screen bg-background font-arabic antialiased">
+        <PWARegister />
         <AuthProvider>
           <ThemeProvider
             attribute="class"

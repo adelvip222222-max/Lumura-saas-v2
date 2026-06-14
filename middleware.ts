@@ -1,5 +1,5 @@
-// src/middleware.ts
-import { auth } from "@/lib/auth";
+import NextAuth from "next-auth";
+import { authConfig } from "@/lib/auth.config";
 import {
   canAccessStore,
   canAccessStorePath,
@@ -63,6 +63,8 @@ function nextWithPath(request: NextRequest, pathname: string) {
     },
   });
 }
+
+const { auth } = NextAuth(authConfig);
 
 export default auth((request) => {
   const authRequest = request as AuthRequest;

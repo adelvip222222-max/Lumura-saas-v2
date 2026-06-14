@@ -15,6 +15,7 @@ export async function getStoreMetadata(
     slug: storeSlug,
     isDeleted: false,
     isActive: true,
+    isSuspended: { $ne: true },
   }).lean();
 
   if (!store) return null;

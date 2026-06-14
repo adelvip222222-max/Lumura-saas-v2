@@ -36,7 +36,7 @@ export default async function StoreLayout({ children, params }: Props) {
   const subscriptionState = await syncStoreSubscriptionBySlug(storeSlug);
   const refreshed = await Store.findById(storeDoc._id).lean();
 
-  if (!refreshed?.isActive || subscriptionState?.isExpired) {
+  if (!refreshed?.isActive || refreshed?.isSuspended || subscriptionState?.isExpired) {
     return <StoreSuspended storeName={storeDoc.name} />;
   }
 

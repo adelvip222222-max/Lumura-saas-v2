@@ -12,7 +12,15 @@ import { useTranslation } from "@/hooks/use-translation";
 import { updateStoreAction } from "@/actions/stores";
 import { cn } from "@/lib/utils";
 import { ThemePresetSelector } from "@/components/admin/theme-preset-selector";
-import { getDefaultTheme } from "@/config/store-themes";
+import {
+  getDefaultTheme,
+  type FiltersPlacement,
+  type HeroStyle,
+  type IconStyle,
+  type ProductGridStyle,
+  type StoreFont,
+  type StoreRadius,
+} from "@/config/store-themes";
 
 export interface StoreSettingsData {
   _id: string;
@@ -40,6 +48,12 @@ export interface StoreSettingsData {
     timezone: string;
     dateFormat: string;
     themePreset?: string;
+    productGridStyle?: ProductGridStyle;
+    filtersPlacement?: FiltersPlacement;
+    heroStyle?: HeroStyle;
+    iconStyle?: IconStyle;
+    fontFamily?: StoreFont;
+    cornerRadius?: StoreRadius;
     theme: { primaryColor: string; secondaryColor: string };
   };
   seo?: {
@@ -176,11 +190,52 @@ function ImageUploadField({
 const textareaClass =
   "flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
+type DesignOption<T extends string> = { value: T; labelAr: string; labelEn: string; descriptionAr: string; descriptionEn: string };
+
+const PRODUCT_GRID_OPTIONS: DesignOption<ProductGridStyle>[] = [
+  { value: "classic", labelAr: "كلاسيك", labelEn: "Classic", descriptionAr: "كروت واضحة بأبعاد ثابتة مناسبة لمعظم المتاجر", descriptionEn: "Balanced product cards for most stores" },
+  { value: "compact", labelAr: "مضغوط", labelEn: "Compact", descriptionAr: "يعرض منتجات أكثر في الشاشة ويقلل الفراغات", descriptionEn: "Shows more products with tighter spacing" },
+  { value: "editorial", labelAr: "تحريري", labelEn: "Editorial", descriptionAr: "شكل فاخر بصور أكبر واهتمام بالمنتج", descriptionEn: "Premium editorial cards with larger imagery" },
+  { value: "masonry", labelAr: "بوتيك", labelEn: "Boutique", descriptionAr: "كروت ناعمة مستديرة مناسبة للموضة والهدايا", descriptionEn: "Soft boutique cards for fashion and gifts" },
+];
+
+const FILTERS_OPTIONS: DesignOption<FiltersPlacement>[] = [
+  { value: "top", labelAr: "فلاتر أعلى المنتجات", labelEn: "Top filters", descriptionAr: "مناسب للمتاجر الصغيرة والمتوسطة", descriptionEn: "Good for small and medium catalogs" },
+  { value: "sidebar", labelAr: "فلاتر جانبية", labelEn: "Sidebar filters", descriptionAr: "أفضل للمتاجر كثيرة الفئات", descriptionEn: "Best for larger catalogs" },
+  { value: "drawer", labelAr: "زر فلاتر للموبايل", labelEn: "Mobile drawer", descriptionAr: "واجهة هادئة مع إبراز المنتجات", descriptionEn: "Cleaner storefront with product focus" },
+];
+
+const HERO_OPTIONS: DesignOption<HeroStyle>[] = [
+  { value: "split", labelAr: "هيرو منقسم", labelEn: "Split hero", descriptionAr: "نص واضح بجانب سلايدر الصور", descriptionEn: "Text beside image slider" },
+  { value: "centered", labelAr: "هيرو مركزي", labelEn: "Centered hero", descriptionAr: "عنوان في المنتصف مع دعوة شراء مباشرة", descriptionEn: "Centered headline and CTAs" },
+  { value: "editorial", labelAr: "هيرو تحريري", labelEn: "Editorial hero", descriptionAr: "إحساس فاخر بكتل صور وألوان", descriptionEn: "Premium magazine-like intro" },
+];
+
+const ICON_OPTIONS: DesignOption<IconStyle>[] = [
+  { value: "outline", labelAr: "أيقونات خطية", labelEn: "Outline", descriptionAr: "خفيفة وبسيطة", descriptionEn: "Light and minimal" },
+  { value: "solid", labelAr: "أيقونات ممتلئة", labelEn: "Solid", descriptionAr: "واضحة وجريئة", descriptionEn: "Bold and visible" },
+  { value: "duotone", labelAr: "أيقونات ثنائية", labelEn: "Duotone", descriptionAr: "لمسة SaaS حديثة", descriptionEn: "Modern SaaS feel" },
+];
+
+const FONT_OPTIONS: DesignOption<StoreFont>[] = [
+  { value: "system", labelAr: "افتراضي سريع", labelEn: "System", descriptionAr: "الأسرع والأكثر توافقًا", descriptionEn: "Fastest and safest" },
+  { value: "cairo", labelAr: "Cairo", labelEn: "Cairo", descriptionAr: "ممتاز للعربية والمتاجر المحلية", descriptionEn: "Great for Arabic storefronts" },
+  { value: "tajawal", labelAr: "Tajawal", labelEn: "Tajawal", descriptionAr: "ناعم ومناسب للموضة", descriptionEn: "Soft and boutique friendly" },
+  { value: "inter", labelAr: "Inter", labelEn: "Inter", descriptionAr: "احترافي ومناسب للإنجليزية", descriptionEn: "Professional Latin UI" },
+];
+
+const RADIUS_OPTIONS: DesignOption<StoreRadius>[] = [
+  { value: "sharp", labelAr: "حاد", labelEn: "Sharp", descriptionAr: "مظهر فاخر ورسمي", descriptionEn: "Premium sharp look" },
+  { value: "soft", labelAr: "ناعم", labelEn: "Soft", descriptionAr: "متوازن لمعظم المتاجر", descriptionEn: "Balanced default" },
+  { value: "rounded", labelAr: "مستدير", labelEn: "Rounded", descriptionAr: "ودود ومناسب للعروض", descriptionEn: "Friendly playful feel" },
+];
+
 export function StoreSettingsPanel({ store, storeSlug, section }: Props) {
   const router = useRouter();
   const { locale } = useTranslation();
   const isAr = locale === "ar";
   const [saving, setSaving] = useState(false);
+  const defaultTheme = getDefaultTheme();
 
   const [form, setForm] = useState({
     name: store.name,
@@ -210,9 +265,15 @@ export function StoreSettingsPanel({ store, storeSlug, section }: Props) {
     currency: store.settings.currency,
     language: store.settings.language as "ar" | "en",
     timezone: store.settings.timezone,
-    themePreset: store.settings.themePreset ?? getDefaultTheme().id,
-    primaryColor: store.settings.theme.primaryColor,
-    secondaryColor: store.settings.theme.secondaryColor,
+    themePreset: store.settings.themePreset ?? defaultTheme.id,
+    productGridStyle: (store.settings.productGridStyle ?? defaultTheme.productGridStyle) as ProductGridStyle,
+    filtersPlacement: (store.settings.filtersPlacement ?? defaultTheme.filtersPlacement) as FiltersPlacement,
+    heroStyle: (store.settings.heroStyle ?? defaultTheme.heroStyle) as HeroStyle,
+    iconStyle: (store.settings.iconStyle ?? defaultTheme.iconStyle) as IconStyle,
+    fontFamily: (store.settings.fontFamily ?? defaultTheme.fontFamily) as StoreFont,
+    cornerRadius: (store.settings.cornerRadius ?? defaultTheme.cornerRadius) as StoreRadius,
+    primaryColor: store.settings.theme.primaryColor || defaultTheme.primaryColor,
+    secondaryColor: store.settings.theme.secondaryColor || defaultTheme.secondaryColor,
     seoTitle: store.seo?.title ?? "",
     seoTitleEn: store.seo?.titleEn ?? "",
     seoDescription: store.seo?.description ?? "",
@@ -267,6 +328,12 @@ export function StoreSettingsPanel({ store, storeSlug, section }: Props) {
         Object.assign(payload, {
           settings: {
             themePreset: form.themePreset,
+            productGridStyle: form.productGridStyle,
+            filtersPlacement: form.filtersPlacement,
+            heroStyle: form.heroStyle,
+            iconStyle: form.iconStyle,
+            fontFamily: form.fontFamily,
+            cornerRadius: form.cornerRadius,
             theme: {
               primaryColor: form.primaryColor,
               secondaryColor: form.secondaryColor,
@@ -585,16 +652,79 @@ export function StoreSettingsPanel({ store, storeSlug, section }: Props) {
           <CardContent>
             <ThemePresetSelector
               value={form.themePreset}
-              onChange={(themeId, primaryColor, secondaryColor) => {
+              onChange={(theme) => {
                 setForm({
                   ...form,
-                  themePreset: themeId,
-                  primaryColor,
-                  secondaryColor,
+                  themePreset: theme.id,
+                  productGridStyle: theme.productGridStyle,
+                  filtersPlacement: theme.filtersPlacement,
+                  heroStyle: theme.heroStyle,
+                  iconStyle: theme.iconStyle,
+                  fontFamily: theme.fontFamily,
+                  cornerRadius: theme.cornerRadius,
+                  primaryColor: theme.primaryColor,
+                  secondaryColor: theme.secondaryColor,
                 });
               }}
               isAr={isAr}
             />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">{isAr ? "تفاصيل شكل الواجهة" : "Storefront Layout Details"}</CardTitle>
+            <CardDescription>
+              {isAr
+                ? "تحكم في شكل شبكة المنتجات، مكان الفلاتر، الهيرو، الأيقونات، الفونت، واستدارة الكروت"
+                : "Control product grid, filters position, hero, icons, font and card radius"}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <DesignChoiceGrid
+              title={isAr ? "شكل شبكة المنتجات" : "Product grid style"}
+              options={PRODUCT_GRID_OPTIONS}
+              value={form.productGridStyle}
+              isAr={isAr}
+              onChange={(value) => setForm({ ...form, productGridStyle: value })}
+            />
+            <DesignChoiceGrid
+              title={isAr ? "مكان الفلاتر" : "Filters placement"}
+              options={FILTERS_OPTIONS}
+              value={form.filtersPlacement}
+              isAr={isAr}
+              onChange={(value) => setForm({ ...form, filtersPlacement: value })}
+            />
+            <DesignChoiceGrid
+              title={isAr ? "شكل الهيرو سكشن" : "Hero section style"}
+              options={HERO_OPTIONS}
+              value={form.heroStyle}
+              isAr={isAr}
+              onChange={(value) => setForm({ ...form, heroStyle: value })}
+            />
+            <div className="grid gap-6 lg:grid-cols-3">
+              <DesignChoiceGrid
+                title={isAr ? "شكل الأيقونات" : "Icon style"}
+                options={ICON_OPTIONS}
+                value={form.iconStyle}
+                isAr={isAr}
+                onChange={(value) => setForm({ ...form, iconStyle: value })}
+              />
+              <DesignChoiceGrid
+                title={isAr ? "الفونت" : "Font"}
+                options={FONT_OPTIONS}
+                value={form.fontFamily}
+                isAr={isAr}
+                onChange={(value) => setForm({ ...form, fontFamily: value })}
+              />
+              <DesignChoiceGrid
+                title={isAr ? "استدارة العناصر" : "Corner radius"}
+                options={RADIUS_OPTIONS}
+                value={form.cornerRadius}
+                isAr={isAr}
+                onChange={(value) => setForm({ ...form, cornerRadius: value })}
+              />
+            </div>
           </CardContent>
         </Card>
 
@@ -744,6 +874,47 @@ export function StoreSettingsPanel({ store, storeSlug, section }: Props) {
         </CardContent>
       </Card>
       <SaveButton saving={saving} onSave={handleSave} isAr={isAr} />
+    </div>
+  );
+}
+
+function DesignChoiceGrid<T extends string>({
+  title,
+  options,
+  value,
+  isAr,
+  onChange,
+}: {
+  title: string;
+  options: DesignOption<T>[];
+  value: T;
+  isAr: boolean;
+  onChange: (value: T) => void;
+}) {
+  return (
+    <div className="space-y-3">
+      <p className="text-sm font-semibold">{title}</p>
+      <div className="grid gap-2 sm:grid-cols-2">
+        {options.map((option) => {
+          const selected = value === option.value;
+          return (
+            <button
+              key={option.value}
+              type="button"
+              onClick={() => onChange(option.value)}
+              className={cn(
+                "rounded-xl border p-3 text-start transition hover:bg-muted/60",
+                selected ? "border-primary bg-primary/5 shadow-sm" : "border-border"
+              )}
+            >
+              <span className="text-sm font-semibold">{isAr ? option.labelAr : option.labelEn}</span>
+              <span className="mt-1 block text-xs leading-5 text-muted-foreground">
+                {isAr ? option.descriptionAr : option.descriptionEn}
+              </span>
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }

@@ -179,7 +179,11 @@ export async function cancelSubscriptionAction(
         canceledAt: new Date(),
         autoRenew:  false,
       });
-      await Store.findByIdAndUpdate(storeId, { isSuspended: true });
+      await Store.findByIdAndUpdate(storeId, {
+        isActive: false,
+        isSuspended: true,
+        suspendedReason: "subscription_canceled",
+      });
     } else {
       await Subscription.findByIdAndUpdate(sub._id, { autoRenew: false });
     }

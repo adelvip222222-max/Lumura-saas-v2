@@ -23,7 +23,9 @@ import {
   buildStorePublicTheme,
   getStoreDisplayName,
   getStoreShortBio,
+  type StorePublicTheme,
 } from "@/lib/store/store-theme";
+import { cn } from "@/lib/utils";
 
 import "@/models";
 
@@ -39,7 +41,7 @@ export async function generateMetadata({ params }: Props) {
 export default async function StoreHomePage({ params }: Props) {
   const { storeSlug } = await params;
 
-  const store = await getStoreBySlug(storeSlug);
+  const store = await getStoreBySlug(storeSlug, { publicOnly: true });
   if (!store) notFound();
 
   const [categories, productsResult, brands] = await Promise.all([
@@ -68,64 +70,20 @@ export default async function StoreHomePage({ params }: Props) {
       ? "اكتشف تشكيلة مختارة بعناية من المنتجات الجديدة والعروض المميزة."
       : "Discover a curated selection of new arrivals and featured offers.");
 
-  const fallbackHeroImage =
-    theme.coverImage ||
-    heroProducts.find((product: any) => product.images?.[0]?.url)?.images?.[0]?.url;
+  const firstHeroProductWithImage = heroProducts.find((product: any) => product.images?.[0]?.url) as any;
+  const fallbackHeroImage = theme.coverImage || firstHeroProductWithImage?.images?.[0]?.url;
 
   return (
     <div className="bg-white text-slate-950" dir={dir}>
-      <section className="relative overflow-hidden">
-        <div className="mx-auto grid min-h-[560px] max-w-7xl items-center gap-10 px-4 py-12 sm:px-6 lg:grid-cols-[1fr_0.9fr] lg:px-8 lg:py-16">
-          <div className="max-w-2xl">
-            <p className="mb-4 text-xs font-bold uppercase tracking-[0.32em] text-slate-400">
-              {isAr ? "مجموعة الموسم" : "Season collection"}
-            </p>
-            <h1 className="text-4xl font-black leading-tight tracking-normal text-slate-950 sm:text-5xl lg:text-6xl">
-              {isAr ? "تسوّق أحدث المنتجات بأسلوب بسيط وأنيق" : "Shop new arrivals with a clean modern style"}
-            </h1>
-            <p className="mt-5 max-w-xl text-base leading-8 text-slate-600">{bio}</p>
-
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Link
-                href={`/${storeSlug}/products`}
-                className="inline-flex h-12 items-center justify-center gap-2 rounded-none px-8 text-sm font-bold uppercase tracking-wide text-white transition hover:opacity-90"
-                style={{ backgroundColor: "var(--store-primary)" }}
-              >
-                {isAr ? "تسوق الآن" : "Shop now"}
-                <ArrowIcon className="h-4 w-4" />
-              </Link>
-              <Link
-                href={`/${storeSlug}/categories`}
-                className="inline-flex h-12 items-center justify-center border border-slate-300 px-8 text-sm font-bold uppercase tracking-wide text-slate-900 transition hover:border-slate-950"
-              >
-                {isAr ? "استكشف الفئات" : "Explore categories"}
-              </Link>
-            </div>
-
-            <form action={`/${storeSlug}/search`} className="mt-10 max-w-lg">
-              <div className="flex h-14 items-center border border-slate-200 bg-white px-4 shadow-sm">
-                <Search className="h-5 w-5 shrink-0 text-slate-400" />
-                <input
-                  name="q"
-                  className="h-full min-w-0 flex-1 bg-transparent px-3 text-sm outline-none"
-                  placeholder={isAr ? "ابحث عن منتج، تصنيف، أو ماركة" : "Search product, category, or brand"}
-                />
-                <button type="submit" className="text-sm font-bold text-slate-950">
-                  {isAr ? "بحث" : "Search"}
-                </button>
-              </div>
-            </form>
-          </div>
-
-          <StoreHomeHeroSlider
-            slides={theme.coverImages ?? []}
-            fallbackImage={fallbackHeroImage}
-            storeName={storeName}
-            caption={isAr ? "منتجات مختارة بعناية" : "Curated products"}
-            isAr={isAr}
-          />
-        </div>
-      </section>
+      <HeroSection
+        theme={theme}
+        storeSlug={storeSlug}
+        storeName={storeName}
+        bio={bio}
+        fallbackHeroImage={fallbackHeroImage}
+        isAr={isAr}
+        ArrowIcon={ArrowIcon}
+      />
 
       {plainCategories.length > 0 && (
         <section className="border-y border-slate-100 bg-slate-50/60 py-12">
@@ -141,7 +99,7 @@ export default async function StoreHomePage({ params }: Props) {
                 <Link
                   key={category._id}
                   href={`/${storeSlug}/categories/${category.slug}`}
-                  className="group relative min-h-44 overflow-hidden bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-xl"
+                  className="group store-rounded-by-theme relative min-h-44 overflow-hidden bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-xl"
                 >
                   <div className="absolute inset-0 bg-gradient-to-br from-slate-50 to-white" />
                   <div
@@ -149,7 +107,7 @@ export default async function StoreHomePage({ params }: Props) {
                     style={{ backgroundColor: index % 2 ? "var(--store-secondary)" : "var(--store-primary)" }}
                   />
                   <div className="relative">
-                    <span className="grid h-12 w-12 place-items-center rounded-full bg-slate-100 text-slate-700">
+                    <span className="store-feature-icon grid h-12 w-12 place-items-center rounded-full">
                       <Package className="h-5 w-5" />
                     </span>
                     <h3 className="mt-5 text-xl font-black text-slate-950">{category.name}</h3>
@@ -174,7 +132,7 @@ export default async function StoreHomePage({ params }: Props) {
               href={`/${storeSlug}/products`}
               hrefLabel={isAr ? "عرض الكل" : "View all"}
             />
-            <ProductGrid products={newProducts} storeSlug={storeSlug} />
+            <ProductGrid products={newProducts} storeSlug={storeSlug} theme={theme} />
           </div>
         </section>
       )}
@@ -196,7 +154,7 @@ export default async function StoreHomePage({ params }: Props) {
           </div>
           <Link
             href={`/${storeSlug}/products?featured=true`}
-            className="inline-flex h-12 items-center justify-center gap-2 bg-white px-8 text-sm font-black uppercase tracking-wide text-slate-950"
+            className="inline-flex h-12 items-center justify-center gap-2 rounded-[var(--store-radius)] bg-white px-8 text-sm font-black uppercase tracking-wide text-slate-950"
           >
             {isAr ? "المنتجات المميزة" : "Featured products"}
             <ArrowRight className="h-4 w-4" />
@@ -213,7 +171,7 @@ export default async function StoreHomePage({ params }: Props) {
               href={`/${storeSlug}/products?featured=true`}
               hrefLabel={isAr ? "عرض الكل" : "View all"}
             />
-            <ProductGrid products={featuredProducts} storeSlug={storeSlug} />
+            <ProductGrid products={featuredProducts} storeSlug={storeSlug} theme={theme} />
           </div>
         </section>
       )}
@@ -232,7 +190,7 @@ export default async function StoreHomePage({ params }: Props) {
                 <Link
                   key={brand._id}
                   href={`/${storeSlug}/brands/${brand.slug}`}
-                  className="flex h-20 items-center justify-center border border-slate-200 bg-white px-4 text-center text-sm font-black text-slate-700 transition hover:border-slate-950"
+                  className="store-rounded-by-theme flex h-20 items-center justify-center border border-slate-200 bg-white px-4 text-center text-sm font-black text-slate-700 transition hover:border-slate-950"
                 >
                   {brand.name}
                 </Link>
@@ -251,8 +209,8 @@ export default async function StoreHomePage({ params }: Props) {
             { icon: Headphones, title: isAr ? "دعم العملاء" : "Customer support", desc: isAr ? "نحن هنا للمساعدة" : "Here when needed" },
           ].map((item) => (
             <div key={item.title} className="flex items-center gap-4">
-              <span className="grid h-12 w-12 place-items-center rounded-full bg-slate-100">
-                <item.icon className="h-5 w-5 text-slate-700" />
+              <span className="store-feature-icon grid h-12 w-12 place-items-center rounded-full">
+                <item.icon className="h-5 w-5" />
               </span>
               <div>
                 <h3 className="font-black text-slate-950">{item.title}</h3>
@@ -263,6 +221,108 @@ export default async function StoreHomePage({ params }: Props) {
         </div>
       </section>
     </div>
+  );
+}
+
+function HeroSection({
+  theme,
+  storeSlug,
+  storeName,
+  bio,
+  fallbackHeroImage,
+  isAr,
+  ArrowIcon,
+}: {
+  theme: StorePublicTheme;
+  storeSlug: string;
+  storeName: string;
+  bio: string;
+  fallbackHeroImage?: string;
+  isAr: boolean;
+  ArrowIcon: typeof ChevronLeft;
+}) {
+  const centered = theme.heroStyle === "centered";
+  const editorial = theme.heroStyle === "editorial";
+
+  return (
+    <section
+      className={cn(
+        "relative overflow-hidden",
+        centered && "bg-[var(--store-primary-muted)] text-center",
+        editorial && "bg-slate-950 text-white"
+      )}
+    >
+      <div
+        className={cn(
+          "absolute inset-0 opacity-70",
+          centered && "bg-[radial-gradient(circle_at_top,var(--store-secondary-soft),transparent_45%)]",
+          editorial && "bg-[radial-gradient(circle_at_top_right,var(--store-primary-soft),transparent_40%)]"
+        )}
+      />
+      <div
+        className={cn(
+          "relative mx-auto grid min-h-[560px] max-w-7xl items-center gap-10 px-4 py-12 sm:px-6 lg:px-8 lg:py-16",
+          centered ? "lg:grid-cols-1" : "lg:grid-cols-[1fr_0.9fr]",
+          editorial && "lg:grid-cols-[0.95fr_1.05fr]"
+        )}
+      >
+        <div className={cn("max-w-2xl", centered && "mx-auto", editorial && "lg:order-2")}>
+          <p className={cn("mb-4 text-xs font-bold uppercase tracking-[0.32em]", editorial ? "text-white/50" : "text-slate-400")}>
+            {isAr ? "مجموعة الموسم" : "Season collection"}
+          </p>
+          <h1 className={cn("text-4xl font-black leading-tight tracking-normal sm:text-5xl lg:text-6xl", editorial ? "text-white" : "text-slate-950")}>
+            {isAr ? "تسوّق أحدث المنتجات بأسلوب يعكس هوية متجرك" : "Shop new arrivals in a storefront that fits your brand"}
+          </h1>
+          <p className={cn("mt-5 max-w-xl text-base leading-8", centered && "mx-auto", editorial ? "text-slate-300" : "text-slate-600")}>
+            {bio}
+          </p>
+
+          <div className={cn("mt-8 flex flex-col gap-3 sm:flex-row", centered && "justify-center")}>
+            <Link
+              href={`/${storeSlug}/products`}
+              className="inline-flex h-12 items-center justify-center gap-2 rounded-[var(--store-radius)] px-8 text-sm font-bold uppercase tracking-wide text-white transition hover:opacity-90"
+              style={{ backgroundColor: "var(--store-primary)" }}
+            >
+              {isAr ? "تسوق الآن" : "Shop now"}
+              <ArrowIcon className="h-4 w-4" />
+            </Link>
+            <Link
+              href={`/${storeSlug}/categories`}
+              className={cn(
+                "inline-flex h-12 items-center justify-center rounded-[var(--store-radius)] border px-8 text-sm font-bold uppercase tracking-wide transition",
+                editorial ? "border-white/25 text-white hover:bg-white/10" : "border-slate-300 text-slate-900 hover:border-slate-950"
+              )}
+            >
+              {isAr ? "استكشف الفئات" : "Explore categories"}
+            </Link>
+          </div>
+
+          <form action={`/${storeSlug}/search`} className={cn("mt-10 max-w-lg", centered && "mx-auto")}>
+            <div className="flex h-14 items-center rounded-[var(--store-radius)] border border-slate-200 bg-white px-4 shadow-sm">
+              <Search className="h-5 w-5 shrink-0 text-slate-400" />
+              <input
+                name="q"
+                className="h-full min-w-0 flex-1 bg-transparent px-3 text-sm text-slate-900 outline-none"
+                placeholder={isAr ? "ابحث عن منتج، تصنيف، أو ماركة" : "Search product, category, or brand"}
+              />
+              <button type="submit" className="text-sm font-bold text-slate-950">
+                {isAr ? "بحث" : "Search"}
+              </button>
+            </div>
+          </form>
+        </div>
+
+        {!centered && (
+          <StoreHomeHeroSlider
+            slides={theme.coverImages ?? []}
+            fallbackImage={fallbackHeroImage}
+            storeName={storeName}
+            caption={isAr ? "منتجات مختارة بعناية" : "Curated products"}
+            isAr={isAr}
+          />
+        )}
+      </div>
+    </section>
   );
 }
 
@@ -290,9 +350,16 @@ function SectionTitle({
   );
 }
 
-function ProductGrid({ products, storeSlug }: { products: any[]; storeSlug: string }) {
+function ProductGrid({ products, storeSlug, theme }: { products: any[]; storeSlug: string; theme: StorePublicTheme }) {
+  const gridClass = {
+    classic: "grid-cols-2 gap-x-4 gap-y-8 md:grid-cols-3 lg:grid-cols-4",
+    compact: "grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-5",
+    editorial: "grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3",
+    masonry: "grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4",
+  }[theme.productGridStyle];
+
   return (
-    <div className="mt-8 grid grid-cols-2 gap-x-4 gap-y-8 md:grid-cols-3 lg:grid-cols-4">
+    <div className={cn("mt-8 grid", gridClass)}>
       {products.map((product: any) => (
         <ProductCard key={product._id} product={product} storeSlug={storeSlug} />
       ))}

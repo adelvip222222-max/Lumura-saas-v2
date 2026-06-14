@@ -192,7 +192,7 @@ export async function syncStoreSubscriptionExpiry(storeId: string): Promise<Stor
 
   const [sub, store] = await Promise.all([
     Subscription.findOne({ storeId: oid }),
-    Store.findById(oid).select("isActive").lean(),
+    Store.findById(oid).select("isActive isSuspended").lean(),
   ]);
 
   if (!sub || !store) return null;
@@ -205,7 +205,7 @@ export async function syncStoreSubscriptionExpiry(storeId: string): Promise<Stor
   if (expiredByDate && activeStatuses.includes(sub.status)) {
     await Promise.all([
       Subscription.findByIdAndUpdate(sub._id, { status: "paused" }),
-      Store.findByIdAndUpdate(oid, { isActive: false }),
+      Store.findByIdAndUpdate(oid, { isActive: false, isSuspended: true, suspendedReason: "subscription_expired" }),
     ]);
     sub.status = "paused";
   }
@@ -215,8 +215,11 @@ export async function syncStoreSubscriptionExpiry(storeId: string): Promise<Stor
     endDate: sub.endDate,
   });
 
-  if (subscriptionValid && !store.isActive) {
-    await Store.findByIdAndUpdate(oid, { isActive: true });
+  if (subscriptionValid && (!store.isActive || store.isSuspended)) {
+    await Store.findByIdAndUpdate(oid, {
+      $set: { isActive: true, isSuspended: false },
+      $unset: { suspendedReason: "" },
+    });
   }
 
   return {
@@ -285,7 +288,10 @@ export async function assignPlanToStore(
   );
 
   if (updated) {
-    await Store.findByIdAndUpdate(storeId, { isActive: true });
+    await Store.findByIdAndUpdate(storeId, {
+      $set: { isActive: true, isSuspended: false },
+      $unset: { suspendedReason: "" },
+    });
   }
 
   return updated;

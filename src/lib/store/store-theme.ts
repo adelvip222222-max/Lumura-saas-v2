@@ -1,4 +1,14 @@
 import type { Metadata } from "next";
+import {
+  getDefaultTheme,
+  getThemeById,
+  type FiltersPlacement,
+  type HeroStyle,
+  type IconStyle,
+  type ProductGridStyle,
+  type StoreFont,
+  type StoreRadius,
+} from "@/config/store-themes";
 
 /** بيانات الهوية البصرية للمتجر — تُمرَّر من السيرفر للواجهة */
 export interface StorePublicTheme {
@@ -16,8 +26,15 @@ export interface StorePublicTheme {
   address?: string;
   language: "ar" | "en";
   currency: string;
+  themePreset: string;
   primaryColor: string;
   secondaryColor: string;
+  productGridStyle: ProductGridStyle;
+  filtersPlacement: FiltersPlacement;
+  heroStyle: HeroStyle;
+  iconStyle: IconStyle;
+  fontFamily: StoreFont;
+  cornerRadius: StoreRadius;
 }
 
 type StoreDoc = {
@@ -36,6 +53,13 @@ type StoreDoc = {
   settings?: {
     language?: string;
     currency?: string;
+    themePreset?: string;
+    productGridStyle?: ProductGridStyle;
+    filtersPlacement?: FiltersPlacement;
+    heroStyle?: HeroStyle;
+    iconStyle?: IconStyle;
+    fontFamily?: StoreFont;
+    cornerRadius?: StoreRadius;
     theme?: { primaryColor?: string; secondaryColor?: string };
   };
   seo?: {
@@ -49,6 +73,8 @@ type StoreDoc = {
 };
 
 export function buildStorePublicTheme(store: StoreDoc): StorePublicTheme {
+  const preset = getThemeById(store.settings?.themePreset) ?? getDefaultTheme();
+
   return {
     slug: store.slug,
     name: store.name,
@@ -68,8 +94,15 @@ export function buildStorePublicTheme(store: StoreDoc): StorePublicTheme {
     address: store.address,
     language: store.settings?.language === "en" ? "en" : "ar",
     currency: store.settings?.currency || "EGP",
-    primaryColor: store.settings?.theme?.primaryColor || "#f97316",
-    secondaryColor: store.settings?.theme?.secondaryColor || "#10b981",
+    themePreset: preset.id,
+    primaryColor: store.settings?.theme?.primaryColor || preset.primaryColor,
+    secondaryColor: store.settings?.theme?.secondaryColor || preset.secondaryColor,
+    productGridStyle: store.settings?.productGridStyle || preset.productGridStyle,
+    filtersPlacement: store.settings?.filtersPlacement || preset.filtersPlacement,
+    heroStyle: store.settings?.heroStyle || preset.heroStyle,
+    iconStyle: store.settings?.iconStyle || preset.iconStyle,
+    fontFamily: store.settings?.fontFamily || preset.fontFamily,
+    cornerRadius: store.settings?.cornerRadius || preset.cornerRadius,
   };
 }
 
@@ -83,7 +116,6 @@ export function getStoreShortBio(theme: StorePublicTheme): string | undefined {
   }
   return theme.shortBio || theme.shortBioEn;
 }
-
 
 export function buildStorePageMetadata(
   store: StoreDoc,

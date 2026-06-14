@@ -62,6 +62,12 @@ export default async function AdminSettingsPage({ params }: Props) {
       timezone: String((raw.settings as StoreSettingsData["settings"])?.timezone ?? "Africa/Cairo"),
       dateFormat: String((raw.settings as StoreSettingsData["settings"])?.dateFormat ?? "DD/MM/YYYY"),
       themePreset: String((raw.settings as StoreSettingsData["settings"])?.themePreset ?? "modern"),
+      productGridStyle: ((raw.settings as StoreSettingsData["settings"])?.productGridStyle ?? "classic") as StoreSettingsData["settings"]["productGridStyle"],
+      filtersPlacement: ((raw.settings as StoreSettingsData["settings"])?.filtersPlacement ?? "top") as StoreSettingsData["settings"]["filtersPlacement"],
+      heroStyle: ((raw.settings as StoreSettingsData["settings"])?.heroStyle ?? "split") as StoreSettingsData["settings"]["heroStyle"],
+      iconStyle: ((raw.settings as StoreSettingsData["settings"])?.iconStyle ?? "duotone") as StoreSettingsData["settings"]["iconStyle"],
+      fontFamily: ((raw.settings as StoreSettingsData["settings"])?.fontFamily ?? "system") as StoreSettingsData["settings"]["fontFamily"],
+      cornerRadius: ((raw.settings as StoreSettingsData["settings"])?.cornerRadius ?? "soft") as StoreSettingsData["settings"]["cornerRadius"],
       theme: {
         primaryColor: String((raw.settings as StoreSettingsData["settings"])?.theme?.primaryColor ?? "#f97316"),
         secondaryColor: String((raw.settings as StoreSettingsData["settings"])?.theme?.secondaryColor ?? "#10b981"),

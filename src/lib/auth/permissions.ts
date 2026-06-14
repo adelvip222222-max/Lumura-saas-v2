@@ -1,6 +1,23 @@
-import type { AdminPermission, TenantRole } from "@/models/Tenant";
+export type TenantRole =
+  | "super_admin"
+  | "tenant_admin"
+  | "staff_member"
+  | "staff_orders"
+  | "staff_products"
+  | "staff_reports";
 
-export type { AdminPermission, TenantRole } from "@/models/Tenant";
+export type AdminPermission =
+  | "manage_products"
+  | "manage_orders"
+  | "manage_customers"
+  | "manage_inventory"
+  | "manage_categories"
+  | "manage_brands"
+  | "view_reports"
+  | "view_analytics"
+  | "manage_settings"
+  | "manage_staff"
+  | "manage_subscription";
 
 export type Permission = AdminPermission | "*";
 

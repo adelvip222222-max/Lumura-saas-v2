@@ -10,6 +10,7 @@ import type { ApiResponse } from "@/types";
 import type { IStore } from "@/models/Store";
 import { ensureDefaultPlans, createStoreSubscription } from "@/services/subscription.service";
 import { cleanupStoreMediaOnUpdate } from "@/lib/store/store-media";
+import { getThemeById, getDefaultTheme } from "@/config/store-themes";
 
 // ✅ تسجيل النماذج
 import "@/models/Tenant";
@@ -63,6 +64,12 @@ const updateStoreSchema = z.object({
       timezone: z.string().optional(),
       dateFormat: z.string().optional(),
       themePreset: z.string().optional(),
+      productGridStyle: z.enum(["classic", "compact", "editorial", "masonry"]).optional(),
+      filtersPlacement: z.enum(["top", "sidebar", "drawer"]).optional(),
+      heroStyle: z.enum(["split", "centered", "editorial"]).optional(),
+      iconStyle: z.enum(["outline", "solid", "duotone"]).optional(),
+      fontFamily: z.enum(["system", "cairo", "tajawal", "inter"]).optional(),
+      cornerRadius: z.enum(["sharp", "soft", "rounded"]).optional(),
       theme: z
         .object({
           primaryColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/).optional(),
@@ -98,6 +105,14 @@ export async function createStoreAction(rawData: {
   coverPublicId?: string;
   coverImages?: Array<{ url: string; publicId?: string; alt?: string }>;
   primaryColor?: string;
+  secondaryColor?: string;
+  themePreset?: string;
+  productGridStyle?: "classic" | "compact" | "editorial" | "masonry";
+  filtersPlacement?: "top" | "sidebar" | "drawer";
+  heroStyle?: "split" | "centered" | "editorial";
+  iconStyle?: "outline" | "solid" | "duotone";
+  fontFamily?: "system" | "cairo" | "tajawal" | "inter";
+  cornerRadius?: "sharp" | "soft" | "rounded";
 }): Promise<ApiResponse<{ storeId: string; slug: string }>> {
   const session = await auth();
   if (!session?.user) {
@@ -126,6 +141,7 @@ export async function createStoreAction(rawData: {
     }
 
     // إنشاء المتجر
+    const preset = getThemeById(rawData.themePreset) ?? getDefaultTheme();
     const coverImages = (rawData.coverImages ?? [])
       .filter((image) => image.url)
       .slice(0, 3);
@@ -152,10 +168,16 @@ export async function createStoreAction(rawData: {
         language: "ar",
         timezone: "Africa/Cairo",
         dateFormat: "DD/MM/YYYY",
-        themePreset: "modern",
+        themePreset: preset.id,
+        productGridStyle: rawData.productGridStyle ?? preset.productGridStyle,
+        filtersPlacement: rawData.filtersPlacement ?? preset.filtersPlacement,
+        heroStyle: rawData.heroStyle ?? preset.heroStyle,
+        iconStyle: rawData.iconStyle ?? preset.iconStyle,
+        fontFamily: rawData.fontFamily ?? preset.fontFamily,
+        cornerRadius: rawData.cornerRadius ?? preset.cornerRadius,
         theme: {
-          primaryColor: rawData.primaryColor || "#f97316",
-          secondaryColor: "#10b981",
+          primaryColor: rawData.primaryColor || preset.primaryColor,
+          secondaryColor: rawData.secondaryColor || preset.secondaryColor,
         },
       },
       seo: {

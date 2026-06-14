@@ -28,6 +28,13 @@ interface IStore {
     language: string;
     timezone: string;
     dateFormat: string;
+    themePreset?: string;
+    productGridStyle?: "classic" | "compact" | "editorial" | "masonry";
+    filtersPlacement?: "top" | "sidebar" | "drawer";
+    heroStyle?: "split" | "centered" | "editorial";
+    iconStyle?: "outline" | "solid" | "duotone";
+    fontFamily?: "system" | "cairo" | "tajawal" | "inter";
+    cornerRadius?: "sharp" | "soft" | "rounded";
     theme: {
       primaryColor: string;
       secondaryColor: string;
@@ -47,15 +54,21 @@ interface IStore {
     totalCustomers: number;
   };
   isActive: boolean;
+  isSuspended: boolean;
   isDeleted: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
 
 // جلب متجر بواسطة slug
-export async function getStoreBySlug(slug: string) {
+export async function getStoreBySlug(slug: string, options: { publicOnly?: boolean } = {}) {
   await connectToDatabase();
-  return await Store.findOne({ slug, isDeleted: false }).lean();
+  const query: Record<string, unknown> = { slug, isDeleted: false };
+  if (options.publicOnly) {
+    query.isActive = true;
+    query.isSuspended = { $ne: true };
+  }
+  return await Store.findOne(query).lean();
 }
 
 // جلب متجر بواسطة ID
@@ -112,6 +125,13 @@ export async function createStore(data: {
       language: 'ar',
       timezone: 'Africa/Cairo',
       dateFormat: 'DD/MM/YYYY',
+      themePreset: 'modern',
+      productGridStyle: 'classic',
+      filtersPlacement: 'top',
+      heroStyle: 'split',
+      iconStyle: 'duotone',
+      fontFamily: 'system',
+      cornerRadius: 'soft',
       theme: { primaryColor: '#f97316', secondaryColor: '#10B981' }
     },
     seo: {

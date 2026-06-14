@@ -39,6 +39,12 @@ export interface IStore extends Document {
     timezone: string;
     dateFormat: string;
     themePreset?: string;
+    productGridStyle?: "classic" | "compact" | "editorial" | "masonry";
+    filtersPlacement?: "top" | "sidebar" | "drawer";
+    heroStyle?: "split" | "centered" | "editorial";
+    iconStyle?: "outline" | "solid" | "duotone";
+    fontFamily?: "system" | "cairo" | "tajawal" | "inter";
+    cornerRadius?: "sharp" | "soft" | "rounded";
     theme: {
       primaryColor: string;
       secondaryColor: string;
@@ -61,6 +67,8 @@ export interface IStore extends Document {
   };
   
   isActive: boolean;
+  isSuspended: boolean;
+  suspendedReason?: string;
   isDeleted: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -150,6 +158,12 @@ const StoreSchema = new Schema<IStore>(
       timezone: { type: String, default: 'Africa/Cairo' },
       dateFormat: { type: String, default: 'DD/MM/YYYY' },
       themePreset: { type: String, default: 'modern' },
+      productGridStyle: { type: String, default: 'classic', enum: ['classic', 'compact', 'editorial', 'masonry'] },
+      filtersPlacement: { type: String, default: 'top', enum: ['top', 'sidebar', 'drawer'] },
+      heroStyle: { type: String, default: 'split', enum: ['split', 'centered', 'editorial'] },
+      iconStyle: { type: String, default: 'duotone', enum: ['outline', 'solid', 'duotone'] },
+      fontFamily: { type: String, default: 'system', enum: ['system', 'cairo', 'tajawal', 'inter'] },
+      cornerRadius: { type: String, default: 'soft', enum: ['sharp', 'soft', 'rounded'] },
       theme: {
         primaryColor: { type: String, default: '#f97316', match: /^#[0-9A-Fa-f]{6}$/ },
         secondaryColor: { type: String, default: '#10b981', match: /^#[0-9A-Fa-f]{6}$/ },
@@ -167,6 +181,8 @@ const StoreSchema = new Schema<IStore>(
       totalCustomers: { type: Number, default: 0, min: 0 },
     },
     isActive: { type: Boolean, default: true },
+    isSuspended: { type: Boolean, default: false },
+    suspendedReason: { type: String, trim: true, maxlength: [200, "سبب الإيقاف لا يمكن أن يتجاوز 200 حرف"] },
     isDeleted: { type: Boolean, default: false },
   },
   { timestamps: true }
@@ -176,6 +192,7 @@ const StoreSchema = new Schema<IStore>(
 StoreSchema.index({ tenantId: 1, slug: 1 }, { unique: true });
 StoreSchema.index({ slug: 1 });
 StoreSchema.index({ tenantId: 1, isActive: 1 });
+StoreSchema.index({ tenantId: 1, isSuspended: 1 });
 StoreSchema.index({ name: 'text', description: 'text' });
 
 export default mongoose.models.Store || mongoose.model<IStore>('Store', StoreSchema);

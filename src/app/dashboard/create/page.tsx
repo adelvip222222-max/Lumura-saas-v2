@@ -15,6 +15,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { createStoreAction } from "@/actions/stores";
+import { ThemePresetSelector } from "@/components/admin/theme-preset-selector";
+import { getDefaultTheme } from "@/config/store-themes";
 
 // ✅ Schema التحقق
 const createStoreSchema = z.object({
@@ -43,6 +45,14 @@ const createStoreSchema = z.object({
     .max(3)
     .default([]),
   primaryColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "لون غير صالح (مثال: #f97316)").default("#f97316"),
+  secondaryColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "لون غير صالح (مثال: #10b981)").default("#10b981"),
+  themePreset: z.string().default("modern"),
+  productGridStyle: z.enum(["classic", "compact", "editorial", "masonry"]).default("classic"),
+  filtersPlacement: z.enum(["top", "sidebar", "drawer"]).default("top"),
+  heroStyle: z.enum(["split", "centered", "editorial"]).default("split"),
+  iconStyle: z.enum(["outline", "solid", "duotone"]).default("duotone"),
+  fontFamily: z.enum(["system", "cairo", "tajawal", "inter"]).default("system"),
+  cornerRadius: z.enum(["sharp", "soft", "rounded"]).default("soft"),
 });
 
 type CreateStoreForm = z.infer<typeof createStoreSchema>;
@@ -55,6 +65,7 @@ export default function CreateStorePage() {
   const [activeTab, setActiveTab] = useState("basic");
   const logoInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
+  const defaultTheme = getDefaultTheme();
 
   const {
     register,
@@ -77,7 +88,15 @@ export default function CreateStorePage() {
       coverImage: "",
       coverPublicId: "",
       coverImages: [],
-      primaryColor: "#f97316",
+      primaryColor: defaultTheme.primaryColor,
+      secondaryColor: defaultTheme.secondaryColor,
+      themePreset: defaultTheme.id,
+      productGridStyle: defaultTheme.productGridStyle,
+      filtersPlacement: defaultTheme.filtersPlacement,
+      heroStyle: defaultTheme.heroStyle,
+      iconStyle: defaultTheme.iconStyle,
+      fontFamily: defaultTheme.fontFamily,
+      cornerRadius: defaultTheme.cornerRadius,
     },
   });
 
@@ -218,6 +237,14 @@ export default function CreateStorePage() {
         coverPublicId: data.coverPublicId || "",
         coverImages: data.coverImages || [],
         primaryColor: data.primaryColor,
+        secondaryColor: data.secondaryColor,
+        themePreset: data.themePreset,
+        productGridStyle: data.productGridStyle,
+        filtersPlacement: data.filtersPlacement,
+        heroStyle: data.heroStyle,
+        iconStyle: data.iconStyle,
+        fontFamily: data.fontFamily,
+        cornerRadius: data.cornerRadius,
       });
 
       if (result.success) {
@@ -299,7 +326,7 @@ export default function CreateStorePage() {
                     </Label>
                     <div className="flex items-center gap-2">
                       <span className="text-gray-500 text-sm bg-gray-100 px-3 py-2 rounded-lg whitespace-nowrap">
-                        memodev.com/
+                        {typeof window !== "undefined" ? `${window.location.host}/` : "your-domain.com/"}
                       </span>
                       <Input
                         id="slug"
@@ -431,6 +458,57 @@ export default function CreateStorePage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
+                  <div>
+                    <Label className="text-gray-700">شكل المتجر الجاهز</Label>
+                    <p className="mt-1 text-xs text-gray-500">اختر شكل الهيرو، شبكة المنتجات، مكان الفلاتر، الأيقونات، الفونت والألوان.</p>
+                    <div className="mt-3">
+                      <ThemePresetSelector
+                        value={watch("themePreset")}
+                        isAr
+                        onChange={(theme) => {
+                          setValue("themePreset", theme.id);
+                          setValue("primaryColor", theme.primaryColor);
+                          setValue("secondaryColor", theme.secondaryColor);
+                          setValue("productGridStyle", theme.productGridStyle);
+                          setValue("filtersPlacement", theme.filtersPlacement);
+                          setValue("heroStyle", theme.heroStyle);
+                          setValue("iconStyle", theme.iconStyle);
+                          setValue("fontFamily", theme.fontFamily);
+                          setValue("cornerRadius", theme.cornerRadius);
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div>
+                      <Label htmlFor="primaryColor" className="text-gray-700">اللون الأساسي</Label>
+                      <div className="mt-2 flex items-center gap-3">
+                        <input
+                          id="primaryColor"
+                          type="color"
+                          value={watch("primaryColor")}
+                          onChange={(e) => setValue("primaryColor", e.target.value)}
+                          className="h-10 w-14 cursor-pointer rounded border p-0.5"
+                        />
+                        <Input {...register("primaryColor")} className="font-mono" dir="ltr" />
+                      </div>
+                    </div>
+                    <div>
+                      <Label htmlFor="secondaryColor" className="text-gray-700">اللون الثانوي</Label>
+                      <div className="mt-2 flex items-center gap-3">
+                        <input
+                          id="secondaryColor"
+                          type="color"
+                          value={watch("secondaryColor")}
+                          onChange={(e) => setValue("secondaryColor", e.target.value)}
+                          className="h-10 w-14 cursor-pointer rounded border p-0.5"
+                        />
+                        <Input {...register("secondaryColor")} className="font-mono" dir="ltr" />
+                      </div>
+                    </div>
+                  </div>
+
                   {/* رفع الشعار */}
                   <div>
                     <Label className="text-gray-700">شعار المتجر</Label>
@@ -543,25 +621,6 @@ export default function CreateStorePage() {
                     <p className="text-gray-400 text-xs mt-2">يوصى بحجم 1600x600 بكسل. أول صورة تظهر كغلاف افتراضي والسلايدر يعرض الثلاثة.</p>
                   </div>
 
-                  {/* اللون الأساسي */}
-                  <div>
-                    <Label htmlFor="primaryColor" className="text-gray-700">اللون الأساسي</Label>
-                    <div className="flex items-center gap-3 mt-1">
-                      <input
-                        type="color"
-                        {...register("primaryColor")}
-                        className="w-12 h-12 rounded-lg border cursor-pointer"
-                      />
-                      <Input
-                        {...register("primaryColor")}
-                        placeholder="#f97316"
-                        className="flex-1"
-                      />
-                    </div>
-                    {errors.primaryColor && (
-                      <p className="text-red-500 text-xs mt-1">{errors.primaryColor.message}</p>
-                    )}
-                  </div>
                 </CardContent>
               </Card>
             </TabsContent>

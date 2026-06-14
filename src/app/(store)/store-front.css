@@ -48,3 +48,41 @@
   background-color: var(--store-primary);
   color: white;
 }
+
+/* Storefront design system variables */
+.store-front {
+  font-family: var(--store-font);
+}
+
+.store-front [data-store-surface],
+.store-front .store-surface {
+  border-radius: var(--store-radius);
+}
+
+.store-front[data-corner-radius="sharp"] .store-rounded-by-theme {
+  border-radius: 0;
+}
+
+.store-front[data-corner-radius="soft"] .store-rounded-by-theme {
+  border-radius: 16px;
+}
+
+.store-front[data-corner-radius="rounded"] .store-rounded-by-theme {
+  border-radius: 28px;
+}
+
+.store-front[data-icon-style="solid"] .store-feature-icon {
+  background: var(--store-primary);
+  color: white;
+}
+
+.store-front[data-icon-style="outline"] .store-feature-icon {
+  background: transparent;
+  border: 1px solid color-mix(in srgb, var(--store-primary) 45%, #e2e8f0);
+  color: var(--store-primary);
+}
+
+.store-front[data-icon-style="duotone"] .store-feature-icon {
+  background: linear-gradient(135deg, var(--store-primary-soft), var(--store-secondary-soft));
+  color: var(--store-primary);
+}

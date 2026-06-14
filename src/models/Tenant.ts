@@ -1,26 +1,7 @@
 // src/models/Tenant.ts
 import mongoose, { type Document, Schema } from "mongoose";
 
-export type TenantRole =
-  | "super_admin"
-  | "tenant_admin"
-  | "staff_member"
-  | "staff_orders"
-  | "staff_products"
-  | "staff_reports";
-
-export type AdminPermission =
-  | "manage_products"
-  | "manage_orders"
-  | "manage_customers"
-  | "manage_inventory"
-  | "manage_categories"
-  | "manage_brands"
-  | "view_reports"
-  | "view_analytics"
-  | "manage_settings"
-  | "manage_staff"
-  | "manage_subscription";
+import { type TenantRole, type AdminPermission } from "@/lib/auth/permissions";
 
 export interface IStaffStoreAccess {
   storeId: mongoose.Types.ObjectId;

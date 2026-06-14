@@ -1,4 +1,4 @@
-import { auth } from "@/lib/auth/auth";
+import { auth } from "@/lib/auth";
 import type { UserRole } from "@/types";
 
 export async function requireAuth() {

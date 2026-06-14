@@ -30,7 +30,7 @@ import {
   type TenantRole,
 } from "@/lib/auth/permissions";
 import type { PublicPlan } from "@/actions/plans";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, cn } from "@/lib/utils";
 
 type Locale = "ar" | "en";
 

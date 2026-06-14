@@ -109,16 +109,18 @@ const copy = {
       ],
     },
     pricing: {
-      eyebrow: "خطط مرنة",
-      title: "اختر الخطة المناسبة الآن",
-      subtitle: "ابدأ بالخطة التي تناسب حجمك الحالي، ثم قم بالترقية عندما يكبر متجرك.",
+      eyebrow: "خطط مرنة تناسب طموحاتك",
+      title: "منصة احترافية مدفوعة — مع شهر كامل مجاناً",
+      subtitle: "متجرك الإلكتروني هو مشروعك المستقبلي. نقدم منصة فائقة السرعة ومستقرة تماماً باشتراكات تبدأ من 100 ج.م شهرياً مع شهر كامل مجاناً لتجربة الميزات قبل الدفع.",
       loading: "جاري تجهيز خطط الأسعار...",
-      popular: "الأكثر اختيارًا",
-      free: "مجاني",
+      popular: "الخطة المقترحة",
+      free: "تجربة مجانية",
       month: "شهر",
       yearly: "سنويًا",
-      startFree: "ابدأ مجانًا",
+      startFree: "ابدأ شهرك المجاني",
       subscribe: "اشترك الآن",
+      billingMonthly: "دفع شهري",
+      billingYearly: "دفع سنوي (وفر 20%)",
     },
     cta: {
       title: "جاهز تطلق متجرك؟",
@@ -190,16 +192,18 @@ const copy = {
       ],
     },
     pricing: {
-      eyebrow: "Flexible plans",
-      title: "Choose the right plan today",
-      subtitle: "Start with the plan that fits your current size, then upgrade as your store grows.",
+      eyebrow: "Flexible plans for your ambition",
+      title: "Professional Paid Platform — With 1 Month Free",
+      subtitle: "Your online store is your future project. We offer an ultra-fast, stable platform with plans starting at 100 EGP/month, and a full month free to test all features.",
       loading: "Pricing plans are being prepared...",
-      popular: "Most chosen",
-      free: "Free",
+      popular: "Recommended Plan",
+      free: "Free Trial",
       month: "month",
       yearly: "yearly",
-      startFree: "Start free",
+      startFree: "Start Your Free Month",
       subscribe: "Subscribe now",
+      billingMonthly: "Bill Monthly",
+      billingYearly: "Bill Yearly (Save 20%)",
     },
     cta: {
       title: "Ready to launch your store?",
@@ -238,6 +242,7 @@ export function HomeLanding({ plans }: Props) {
   const [locale, setLocale] = useState<Locale>("ar");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [billingPeriod, setBillingPeriod] = useState<"monthly" | "yearly">("monthly");
 
   const t = copy[locale];
   const isRTL = locale === "ar";
@@ -495,47 +500,111 @@ export function HomeLanding({ plans }: Props) {
         <section id="pricing" className="bg-white py-16 sm:py-20">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <SectionHeading eyebrow={t.pricing.eyebrow} title={t.pricing.title} subtitle={t.pricing.subtitle} />
+            
+            {/* Dynamic Billing Cycle Switcher */}
+            {plans.length > 0 && (
+              <div className="mt-8 flex justify-center items-center gap-4">
+                <span className={cn("text-sm font-bold transition-colors duration-200", billingPeriod === "monthly" ? "text-slate-950" : "text-slate-400")}>
+                  {t.pricing.billingMonthly}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setBillingPeriod(prev => prev === "monthly" ? "yearly" : "monthly")}
+                  className={cn(
+                    "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none",
+                    billingPeriod === "yearly" ? "bg-teal-600" : "bg-slate-200"
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out",
+                      billingPeriod === "yearly" ? "translate-x-5" : "translate-x-0"
+                    )}
+                  />
+                </button>
+                <span className={cn("text-sm font-bold transition-colors duration-200 flex items-center gap-1.5", billingPeriod === "yearly" ? "text-slate-950" : "text-slate-400")}>
+                  {t.pricing.billingYearly}
+                </span>
+              </div>
+            )}
+
             {plans.length === 0 ? (
               <p className="mt-10 text-center text-sm font-semibold text-slate-500">{t.pricing.loading}</p>
             ) : (
-              <div className="mt-10 grid gap-5 lg:grid-cols-3">
+              <div className="mt-10 grid gap-5 lg:grid-cols-3 items-stretch">
                 {plans.map((plan) => {
                   const name = locale === "ar" ? plan.nameAr || plan.displayName : plan.displayName || plan.name;
                   const features = locale === "ar" && plan.featuresAr?.length ? plan.featuresAr : plan.features;
                   const promo = locale === "ar" ? plan.promoLabelAr || plan.promoLabel : plan.promoLabel || plan.promoLabelAr;
 
+                  // Price calculations based on toggle
+                  const displayPrice = plan.price === 0 
+                    ? t.pricing.free 
+                    : billingPeriod === "monthly"
+                      ? formatCurrency(plan.price, plan.currency)
+                      : formatCurrency(Math.round(plan.yearlyPrice / 12), plan.currency);
+
                   return (
                     <article
                       key={plan._id}
-                      className={`relative rounded-lg border bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-xl ${
-                        plan.isFeatured ? "border-teal-500 ring-2 ring-teal-100" : "border-slate-200"
-                      }`}
+                      className={cn(
+                        "relative flex flex-col rounded-2xl border bg-white p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl",
+                        plan.isFeatured ? "border-teal-500 ring-2 ring-teal-50" : "border-slate-200"
+                      )}
                     >
                       {plan.isFeatured && (
-                        <div className="absolute -top-3 left-1/2 inline-flex -translate-x-1/2 items-center gap-1 rounded-full bg-teal-600 px-4 py-1 text-xs font-bold text-white">
+                        <div className="absolute -top-3 left-1/2 inline-flex -translate-x-1/2 items-center gap-1 rounded-full bg-teal-600 px-4 py-1 text-xs font-bold text-white shadow-sm">
                           <Sparkles className="h-3.5 w-3.5" />
                           {t.pricing.popular}
                         </div>
                       )}
+                      
+                      {/* Special trial badge */}
+                      {plan.price > 0 && (
+                        <span className="absolute top-4 end-4 rounded-full bg-teal-50 px-2.5 py-0.5 text-[10px] font-bold text-teal-700 border border-teal-100">
+                          {isRTL ? "شهر مجاناً 🎁" : "1 Month Free 🎁"}
+                        </span>
+                      )}
+
                       {promo && (
-                        <span className="mb-4 inline-flex rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-700">
+                        <span className="mb-4 inline-flex self-start rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-700 border border-amber-100">
                           {promo}
                         </span>
                       )}
-                      <h3 className="text-2xl font-black text-slate-950">{name}</h3>
+                      
+                      <h3 className="text-2xl font-black text-slate-950 mt-2">{name}</h3>
                       <p className="mt-2 min-h-12 text-sm leading-6 text-slate-500">{plan.description}</p>
-                      <div className="mt-6">
+                      
+                      <div className="mt-6 border-b border-slate-100 pb-6">
                         <span className="text-4xl font-black text-slate-950">
-                          {plan.price === 0 ? t.pricing.free : formatCurrency(plan.price, plan.currency)}
+                          {displayPrice}
                         </span>
-                        {plan.price > 0 && <span className="text-sm font-semibold text-slate-500"> / {t.pricing.month}</span>}
-                        {plan.yearlyPrice > 0 && plan.price > 0 && (
-                          <p className="mt-1 text-xs font-semibold text-slate-500">
-                            {formatCurrency(plan.yearlyPrice, plan.currency)} {t.pricing.yearly}
+                        {plan.price > 0 && <span className="text-sm font-bold text-slate-500"> / {t.pricing.month}</span>}
+                        
+                        {plan.price > 0 && billingPeriod === "yearly" && (
+                          <p className="mt-2 text-xs font-bold text-teal-600 bg-teal-50/50 inline-block px-2.5 py-1 rounded-md">
+                            {isRTL 
+                              ? `تُدفع سنوياً بقيمة ${formatCurrency(plan.yearlyPrice, plan.currency)}` 
+                              : `Billed annually at ${formatCurrency(plan.yearlyPrice, plan.currency)}`}
+                          </p>
+                        )}
+                        {plan.price > 0 && billingPeriod === "monthly" && (
+                          <p className="mt-2 text-xs font-semibold text-slate-400">
+                            {isRTL 
+                              ? "فوترة شهرية مرنة - إلغاء في أي وقت" 
+                              : "Flexible monthly billing - Cancel anytime"}
+                          </p>
+                        )}
+                        {plan.price === 0 && (
+                          <p className="mt-2 text-xs font-semibold text-slate-400">
+                            {isRTL 
+                              ? "فترة تجريبية لتجربة المنصة مجاناً" 
+                              : "Test the platform with zero risk"}
                           </p>
                         )}
                       </div>
-                      <ul className="mt-6 space-y-3">
+
+                      <ul className="mt-6 space-y-3 flex-1">
                         {features.slice(0, 6).map((feature) => (
                           <li key={feature} className="flex items-start gap-2 text-sm leading-6 text-slate-600">
                             <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" />
@@ -543,13 +612,15 @@ export function HomeLanding({ plans }: Props) {
                           </li>
                         ))}
                       </ul>
+
                       <Link
                         href="/register"
-                        className={`mt-8 inline-flex h-11 w-full items-center justify-center rounded-lg text-sm font-bold transition ${
+                        className={cn(
+                          "mt-8 inline-flex h-12 w-full items-center justify-center rounded-xl text-sm font-bold transition-all duration-200",
                           plan.isFeatured
-                            ? "bg-teal-600 text-white hover:bg-teal-700"
+                            ? "bg-teal-600 text-white hover:bg-teal-700 shadow-md hover:shadow-teal-100"
                             : "bg-slate-950 text-white hover:bg-slate-800"
-                        }`}
+                        )}
                       >
                         {plan.price === 0 ? t.pricing.startFree : t.pricing.subscribe}
                       </Link>
